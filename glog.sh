@@ -39,9 +39,9 @@ then
 else
 
 	# Si la cantidad de parametros es incorrecta
-	sh ./glog.sh "Glog" "ERR" "Recibidos $# parametros en lugar de 2 o 3"	# Llamada recursiva que loguea error en los parametros del log 
+	$BINDIR/glog.sh "Glog" "ERR" "Recibidos $# parametros en lugar de 2 o 3"	# Llamada recursiva que loguea error en los parametros del log.
 
-	exit $#				# El codigo de error es la cantidad de parametros recibidos 
+	exit $#				# El codigo de error es la cantidad de parametros recibidos.
 
 fi
 
@@ -54,10 +54,9 @@ WHO=$LOGNAME			# Usuario, es el login del usuario.
 # >>: Ej: echo data >> data.txt  Agrega data al final de data.txt y crea el archivo si no existe.
 # >:  Ej: echo data > data.txt   Crea, si no existe, un archivo data.txt y agrega data. Si existe lo sobreescribe.
 
-# Escritura en log:
-echo "$WHEN	$WHO
-$WHERE $WHAT: $WHY
-" >> $LOGPATH
+# Escritura en log: 
+#Ej: 20150505 19:53:22-alumnos-IniPro-WAR-No se pudo arrancar RecPro.
+echo "$WHEN-$WHO-$WHERE-$WHAT-$WHY" >> $LOGPATH
 
 
 # Manejo de crecimiento controlado:
