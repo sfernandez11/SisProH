@@ -17,6 +17,7 @@
 #		secuencia al final del nombre del archivo duplicado y luego mueve el archivo pedido al directorio
 #		destino, retornando 0 (cero). 
 #  - Si hay problemas con los parametros recibidos retorna un valor distinto de 0 (cero).
-#  - Si hay otro tipo de problema siempre se va a logear en el log del comando que ejecuto la funcion mover.
+#  - Si hay otro tipo de problema siempre se va a logear en el log del comando que ejecuto la funcion mover, en
+#		caso de que no se pase el nombre del comando, por defecto se escribe en el log de mover.
 #------------------------------------------------------------------------------------------------------------
 
