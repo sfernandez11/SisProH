@@ -59,8 +59,19 @@ fi
 
 # valido version de perl
 
+if [ -z $(getPerlVersion) ]
+then
+  echo ErrorLog No tiene instalado perl
+  exit 1
+fi
+
+if noCompatiblePerlVersion;
+then
+  echo ErrorLog Se requiere perl 5 o superior
+  exit 1
+fi
 # se cumplieron todas las validaciones empiezo a crear las cosas
 
 # creacion de directorios
-createDirs $GRUPO $MAEDIR $BINDIR $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
-createDirs $INFODIR $DUPDIR $LOGDIR
+createDirs $GRUPO $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
+createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
