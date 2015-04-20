@@ -1,15 +1,26 @@
 # Funciones usadas para la instalacion (InsPro)
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
+function divide(){
+    echo $((($1 + $2/2) / $2))
+}
 
 function freeSpace(){
     local free_space_bytes
-    local free_space_mb
+    #local free_space_mb
     free_space_bytes=`df $1 | tail -n 1 | tr -s ' ' | cut -d' ' -f 4`
     #let free_space_gb="$free_space_bytes/1024/1024"
     #free_space_mb=`echo $free_space_bytes\/1024 | bc -l`
   
-    echo $free_space_bytes
+    echo $(divide $free_space_bytes 1024)
+}
+
+function logInfo(){
+    echo InsPro $1
+}
+
+function logError(){
+    echo InsPro $1 ERR
 }
 
 function setVariable(){
@@ -21,7 +32,7 @@ function setVariable(){
 
     if [ -n "$vaux" ]
     then
-      echo InfoLog $1 cambiado a $vaux
+      logInfo "$1 cambiado a $vaux"
       myresult=$vaux
     fi
     
@@ -50,14 +61,14 @@ function createDirs(){
     do
       if [ -d "$var" ]
       then
-        echo InfoLog directorio "$var" ya existe
+        logInfo "directorio $var ya existe"
         continue
       fi
       if createDir "$var";
       then
-        echo InfoLog Ok directorio "$var" creado
+        logInfo "Ok directorio $var creado"
       else
-        echo ErrorLog $? al crear $1
+        logError "Error nro $? al crear directorio $var"
       fi
     done
 }
@@ -77,15 +88,14 @@ function getPerlVersion(){
 function noCompatiblePerlVersion(){
   if PERL_VERSION=$(getPerlVersion);
   then
-    echo InfoLog Tenemos version de perl $PERL_VERSION
+    logInfo "Perl version $PERL_VERSION instalada"
     version=`echo $PERL_VERSION | sed 's/\([0-9]\{1,2\}\)\..*/\1/'`
-    if [ $version -ge 5 ]
+    if [[ version -ge 5 ]]
     then
-      echo InfoLog Ok version $version es compatible
+      logInfo "Version de perl $version instalada es compatible con el sistema"
       return 1
     fi
     return 0
   fi
   return 1
-  
 }

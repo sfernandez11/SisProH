@@ -51,9 +51,9 @@ current_free_space=$(freeSpace $PWD)
 
 if [ $current_free_space -le $DATASIZE ]
 then
-  echo ErrorLog espacio requerido $DATASIZE
-  echo ErrorLog espacio insuficiente en disco
-  echo ErrorLog espacio que tengo $current_free_space
+  logError "espacio requerido $DATASIZE Mb"
+  logError "espacio insuficiente en disco"
+  logError "espacio que tengo $current_free_space Mb"
   exit 1
 fi 
 
@@ -61,13 +61,13 @@ fi
 
 if [ -z $(getPerlVersion) ]
 then
-  echo ErrorLog No tiene instalado perl
+  logError "No tiene instalado perl"
   exit 1
 fi
 
 if noCompatiblePerlVersion;
 then
-  echo ErrorLog Se requiere perl 5 o superior
+  logError "Se requiere perl 5 o superior"
   exit 1
 fi
 # se cumplieron todas las validaciones empiezo a crear las cosas
