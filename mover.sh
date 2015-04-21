@@ -77,6 +77,8 @@ else
 	if [ "$OCURRENCIA" -ne 0 ]
 	then
         
+        #Como Hipotesis General voy a crear un DUPDIR en cada directorio que haya un archivo duplicado
+        #No uno para toda la instalacion.
         #Si no existe el directorio de DUPDIR en el destino.
 		if [ ! -d "${DESTINO}/$_DUPDIR" ]
 		then
@@ -85,9 +87,17 @@ else
 
 		fi
 
-		#TODO: FALTA MODIFICAR ESTO DE LA SECUENCIA, DEBERIA SER .NNN Y NO LA FECHA
-		#Uso la fecha ahora solo como prueba hasta ver bien lo de la SECUENCIA.
-		SECUENCIA="$(date '+%Y-%m-%d-%H:%M:%S')"
+		#Como Hipotesis General voy a utilizar solo un numero de secuencia para toda la instalacion.
+		#Primero busco en el archivo de configuracion de la instalacion el campo de secuencia y lo asocio a la variable.
+		SECUENCIA=`grep SECUENCIA $CONFDIR/InsPro.conf | cut -d '=' -f 2`
+		#Creo una nueva secuencia sumandole uno a la anterior.
+		NUEVA_SECUENCIA=`expr $SECUENCIA + 1`
+		#Reemplazo la linea vieja del archivo por el nuevo valor de secuencia.
+		sed s/SECUENCIA=$SECUENCIA/SECUENCIA=$NUEVA_SECUENCIA/ $CONFDIR/InsPro.conf > $CONFDIR/temporal
+		#Elimino el archivo viejo de configuracion
+		rm $CONFDIR/InsPro.conf
+		#Muevo el nuevo con el nuevo valor de secuencia.
+		mv $CONFDIR/temporal $CONFDIR/InsPro.conf
 
 		#Muevo el archivo duplicado al directorio DUPDIR con un cambio de nombre que se le agrega una secuencia.
 		mv "${DESTINO}/$NOMBRE_ARCHIVO" "${DESTINO}/$_DUPDIR/${NOMBRE_ARCHIVO}.$SECUENCIA"
