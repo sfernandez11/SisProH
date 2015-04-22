@@ -51,8 +51,8 @@ then
 
 fi
 
+#Se obtiene el nombre del archivo que se va a querer mover.
 NOMBRE_ARCHIVO="${ORIGEN##*/}"
-_DUPDIR="${DUPDIR##*/}"
 
 if [ ! -f "$ORIGEN" ] 		#Verifica si existe el archivo en el origen.
 then
@@ -77,16 +77,6 @@ else
 	if [ "$OCURRENCIA" -ne 0 ]
 	then
         
-        #Como Hipotesis General voy a crear un DUPDIR en cada directorio que haya un archivo duplicado
-        #No uno para toda la instalacion.
-        #Si no existe el directorio de DUPDIR en el destino.
-		if [ ! -d "${DESTINO}/$_DUPDIR" ]
-		then
-
-			mkdir "${DESTINO}/$_DUPDIR" 	#Entonces lo creo.
-
-		fi
-
 		#Como Hipotesis General voy a utilizar solo un numero de secuencia para toda la instalacion.
 		#Primero busco en el archivo de configuracion de la instalacion el campo de secuencia y lo asocio a la variable.
 		SECUENCIA=`grep SECUENCIA $CONFDIR/InsPro.conf | cut -d '=' -f 2`
@@ -99,8 +89,9 @@ else
 		#Muevo el nuevo con el nuevo valor de secuencia.
 		mv $CONFDIR/temporal $CONFDIR/InsPro.conf
 
+        #Como Hipotesis General se toma que hay solo UN directorio de DUPDIR para archivos duplicados para toda la instalacion.
 		#Muevo el archivo duplicado al directorio DUPDIR con un cambio de nombre que se le agrega una secuencia.
-		mv "${DESTINO}/$NOMBRE_ARCHIVO" "${DESTINO}/$_DUPDIR/${NOMBRE_ARCHIVO}.$SECUENCIA"
+		mv "${DESTINO}/$NOMBRE_ARCHIVO" "$DUPDIR/${NOMBRE_ARCHIVO}.$SECUENCIA"
 
 	fi
 
