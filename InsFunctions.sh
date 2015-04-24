@@ -77,7 +77,7 @@ function getPerlVersion(){
   if perl -v < /dev/null &>/dev/null;
   then
     local perlinfo=`perl -v | grep '.' | head -n 1`
-    local version=`echo $perlinfo | sed 's/.*v\([0-9]\{1,2\}\.[0-9]\{1,2\}\.[0-9]\{1,2\}\) .*/\1/'`
+    local version=`echo $perlinfo | sed 's/.*v\([0-9]\{1,2\}\.[0-9]\{1,2\}\.[0-9]\{1,2\}\).*/\1/'`
     echo $version
     return 0
   else
@@ -98,4 +98,33 @@ function noCompatiblePerlVersion(){
     return 0
   fi
   return 1
+}
+
+function isInteger(){
+  case $1 in
+    ''|*[!0-9]*) return 1;;
+    *) return 0 ;;
+  esac
+}
+
+function isDirSimple(){
+    if echo $1 | grep -E '^([[:alnum:]]+[_.-]*[[:alnum:]]*)+$' > /dev/null;
+  then
+    #echo "yes"
+    return 0
+  else
+    #echo "no"
+    return 1
+  fi
+}
+
+function isDirPath(){
+  if echo $1 | grep -E '^/([^[:punct:]]+/?)+$' > /dev/null;
+  then
+    #echo "yes"
+    return 0
+  else
+    #echo "no"
+    return 1
+  fi
 }
