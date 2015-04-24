@@ -31,20 +31,25 @@ do
 		if [ -a PROCDIR/$gest/$doc ]
 		then
 			sh ../glog.sh "ProPro" "Se rechaza el archivo por estar duplicado."
-			mv $RECHDIR/$doc $RECHDIR 
+			mv $RECDIR/$doc $RECHDIR 
 		else
-			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_(.*)/\2;\3/'`
-			echo $normaEmisor
-			if [ -a PROCDIR/$gest ]
+			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`
+			hasNorma=`cat $MAEDIR/tab/nxe.tab | grep $normaEmisor`
+			if [ -z $hasNorma ]
 			then
-				#mv $RECDIR/$doc $PROCDIR/$gest/$doc
-				echo '1'
+				if [ -a PROCDIR/$gest ]
+				then
+					#mv $RECDIR/$doc $PROCDIR/$gest/$doc
+					echo '1'
+				else
+					echo '2'
+					#mkdir $PROCDIR/$gest
+					#mv $RECDIR/$doc $PROCDIR/$gest/$doc
+				fi
 			else
-				echo '2'
-				#mkdir $PROCDIR/$gest
-				#mv $RECDIR/$doc $PROCDIR/$gest/$doc
+				sh ../glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
+				mv $RECDIR/$doc $RECHDIR
 			fi
-
 		fi
 	done
 done
