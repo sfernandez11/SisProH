@@ -7,20 +7,19 @@ function divide(){
 
 function freeSpace(){
     local free_space_bytes
-    #local free_space_mb
     free_space_bytes=`df $1 | tail -n 1 | tr -s ' ' | cut -d' ' -f 4`
-    #let free_space_gb="$free_space_bytes/1024/1024"
-    #free_space_mb=`echo $free_space_bytes\/1024 | bc -l`
   
     echo $(divide $free_space_bytes 1024)
 }
 
 function logInfo(){
     echo InsPro $1
+    #echo $1
+    echo
 }
 
 function logError(){
-    echo InsPro $1 ERR
+    logInfo "$1 ERR"
 }
 
 function setVariable(){
@@ -30,16 +29,20 @@ function setVariable(){
     local myresult=$prevval
     read -p "Defina $2 ($prevval):" vaux
 
-    if [ -n "$vaux" ]
-    then
+    while [ -n "$vaux" ]
+    do
       logInfo "$1 cambiado a $vaux"
-      myresult=$vaux
-    fi
+      if isValid $1 $vaux;
+      then
+        myresult=$vaux
+        vaux=""
+      else
+        echo valor invalido, reingrese.
+        read -p "Defina $2 ($prevval):" vaux
+      fi
+    done
     
-    if [[ "$1" ]];
-    then
-      eval $1="'$myresult'"
-    fi
+    eval $1="'$myresult'"
 }
 
 function setDir(){
@@ -95,9 +98,8 @@ function noCompatiblePerlVersion(){
       logInfo "Version de perl $version instalada es compatible con el sistema"
       return 1
     fi
-    return 0
   fi
-  return 1
+  return 0
 }
 
 function isInteger(){
@@ -127,4 +129,37 @@ function isDirPath(){
     #echo "no"
     return 1
   fi
+}
+
+function isValid(){
+	case $1 in
+	  DUPDIR)
+	    if isDirSimple $2;
+	    then
+	      return 0
+	    fi
+	    logError "\"$2\" No es un directorio simple."
+	    return 1
+	    ;;
+	  *DIR)
+	    if isDirSimple $2;
+	    then
+	      return 0
+	    else
+	      if isDirPath $2;
+	      then
+	        return 0
+	      fi
+	    fi
+	    logError "\"$2\" es un nombre de directorio invalido."
+	    return 1
+	    ;;
+	  *SIZE)
+	    if isInteger $2;
+	    then
+	      return 0
+	    fi
+	    logError "\"$2\" No es un numero entero."
+	    return 1
+	esac
 }

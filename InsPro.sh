@@ -42,7 +42,7 @@ setDir INFODIR "grabación de los informes de salida"
 setDir DUPDIR "repositorio de archivos duplicados"
 setDir LOGDIR "logs"
 setVariable LOGSIZE "tamaño máximo para cada archivo de log en Kbytes"
-setVariable DATASIZE "espacio mínimo libre para el arribo de estas novedades en Mbytes"
+setVariable DATASIZE "espacio mínimo libre para el arribo de las novedades en Mbytes"
 
 # se hacen todas las validaciones
 
