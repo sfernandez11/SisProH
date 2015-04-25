@@ -1,21 +1,43 @@
-#!/bin/bash 
-FILE=./NOVEDIR
-if [ -d "$FILE" ] 
-then
-echo "EXiste NOVEDIR"
-else
-echo "No Existe NOVEDIR"
-fi
-du -s "$FILE"
-DIR="$FILE/*"
+#!/bin/bash -x
+source RecFunctions.sh
 
-#if [ "$(ls -A $DIR)" ]
-#then
-#echo $DIR
-#if
+NOVEDIR=~/TPSO/SisProH/NOVEDIR/*
+RECHDIR=~/TPSO/SisProH/RECHDIR/*
 
-for f in $DIR
+#http://blackshell.usebox.net/pub/shell/taller_sh/x137.html
+
+for file in $NOVEDIR
 do
-echo $f
+	if VerificarTipo "$file";
+	then 
+		if VerificarFormato "$file";
+		then 
+			if verificarCOD_GESTION "$file";
+			then
+				if verificarCOD_NORMA "$file";
+				then
+					if verificarCOD_EMISOR "$file";
+					then
+						if verificarCOD_FECHA "$file";
+						then
+							echo "CAMINO FELIZ"
+							aceptarArchivo $file
+						else
+							echo "escribir log"
+						fi	
+					else
+						echo "escribir log"
+					fi	
+				else
+					echo "escribir log"
+				fi	
+			else	
+				echo "escribir log"		
+			fi
+		else
+			echo "escribir log"
+		fi
+	else
+		echo "escribir log"
+	fi		
 done 
-
