@@ -27,18 +27,18 @@ function setVariable(){
     local vaux
     eval prevval=\$$1
     local myresult=$prevval
-    read -p "Defina $2 ($prevval):" vaux
+    read -p "Defina $2 ($3$prevval):" vaux
 
     while [ -n "$vaux" ]
     do
-      logInfo "$1 cambiado a $vaux"
+      #logInfo "$1 cambiado a $vaux"
       if isValid $1 $vaux;
       then
         myresult=$vaux
         vaux=""
       else
         echo valor invalido, reingrese.
-        read -p "Defina $2 ($prevval):" vaux
+        read -p "Defina $2 ($3$prevval):" vaux
       fi
     done
     
@@ -46,7 +46,7 @@ function setVariable(){
 }
 
 function setDir(){
-    setVariable $1 "el directorio para $2"
+    setVariable $1 "el directorio para $2" "$GRUPO/"
 }
 
 function createDir() {
@@ -60,6 +60,17 @@ function createDir() {
 
 function createDirs(){
     # creo una lista de directorios
+    if [ ! -d "$GRUPO" ]; then
+      # controlo que exista el directorio $GRUPO
+      
+      if createDir "$GRUPO";
+      then
+        logInfo "Directorio $GRUPO creado "
+      else
+        logError "Error al crear el directorio base $GRUPO."
+        exit 1
+      fi
+    fi
     for var in "$@"
     do
       if [ -d "$var" ]
@@ -67,11 +78,11 @@ function createDirs(){
         logInfo "directorio $var ya existe"
         continue
       fi
-      if createDir "$var";
+      if createDirWithSubdir "$var";
       then
         logInfo "Ok directorio $var creado"
-      else
-        logError "Error nro $? al crear directorio $var"
+      #else
+      #  logError "Error nro $? al crear directorio $var"
       fi
     done
 }
@@ -110,7 +121,7 @@ function isInteger(){
 }
 
 function isDirSimple(){
-    if echo $1 | grep -E '^([[:alnum:]]+[_.-]*[[:alnum:]]*)+$' > /dev/null;
+    if echo $1 | grep -E '^/?([[:alnum:]]+[_.-]*[[:alnum:]]*)+/?$' > /dev/null;
   then
     #echo "yes"
     return 0
@@ -136,6 +147,11 @@ function isValid(){
 	  DUPDIR)
 	    if isDirSimple $2;
 	    then
+	      if [[ $2 == conf ]] || [[ $2 == pruebas ]]
+	      then
+	        logError "\"$2\" No puede ser elegido como nombre."
+	        return 1
+	      fi
 	      return 0
 	    fi
 	    logError "\"$2\" No es un directorio simple."
@@ -143,7 +159,13 @@ function isValid(){
 	    ;;
 	  *DIR)
 	    if isDirSimple $2;
+	    #if $(isDirSimple $2)  || $(isDirPath $2)
 	    then
+	      if [[ $2 == conf ]] || [[ $2 == pruebas ]]
+	      then
+	        logError "\"$2\" No puede ser elegido como nombre."
+	        return 1
+	      fi
 	      return 0
 	    else
 	      if isDirPath $2;
@@ -162,4 +184,31 @@ function isValid(){
 	    logError "\"$2\" No es un numero entero."
 	    return 1
 	esac
+}
+
+function createDirWithSubdir(){
+    # creo una lista de directorios que contienen subdirectorios
+    
+    BASE=$GRUPO
+    FOLDERS=$1
+
+    NEWBASE=$BASE
+    for c in `echo $FOLDERS | tr "/" " "`; do
+      NEWBASE="$NEWBASE/$c"
+      if [ -d "$NEWBASE" ]
+      then
+        #logInfo "directorio $var ya existe"
+        continue
+      fi
+      if createDir "$NEWBASE";
+      then
+        logInfo "Directorio $NEWBASE creado."
+      else
+        logError "No se pudo crear directorio $NEWBASE"
+        return 1
+      fi
+    done
+    
+    return 0
+
 }

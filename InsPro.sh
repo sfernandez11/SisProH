@@ -16,18 +16,25 @@
 source InsFunctions.sh
 
 GRUPO=$PWD/grupo02
+CONFDIR=$GRUPO/conf
+
+# TODO: verificar si ya esta instalado y cosas que faltan instalar
+if [ -f $CONFDIR/InsPro.conf ]
+then
+  echo "Ya esta instalado."
+fi
 
 # valores por defecto de las variables de ambiente
-CONFDIR=$GRUPO/conf
-MAEDIR=$GRUPO/mae
-NOVEDIR=$GRUPO/novedades
-ACEPDIR=$GRUPO/a_protocolarizar
-RECHDIR=$GRUPO/rechazados
-PROCDIR=$GRUPO/protocolizados
-INFODIR=$GRUPO/informes
-DUPDIR=$GRUPO/dup
-LOGDIR=$GRUPO/log
-BINDIR=$GRUPO/bin
+
+MAEDIR=mae
+NOVEDIR=novedades
+ACEPDIR=a_protocolarizar
+RECHDIR=rechazados
+PROCDIR=protocolizados
+INFODIR=informes
+DUPDIR=dup
+LOGDIR=log
+BINDIR=bin
 DATASIZE=100
 LOGSIZE=400
 
@@ -73,5 +80,5 @@ fi
 # se cumplieron todas las validaciones empiezo a crear las cosas
 
 # creacion de directorios
-createDirs $GRUPO $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
+createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
