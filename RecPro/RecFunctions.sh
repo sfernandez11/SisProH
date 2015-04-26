@@ -5,16 +5,54 @@
 #                                                                      #
 ########################################################################
 
+#INFORMA AL LOG SOBRE LA EJECUCION
+function logInfo(){
+    echo RecPro $1 $2
+}
+
+#INFORMA AL LOG DE ERRORES OCURRIDOS EN LA EJECUCION
+function logError(){
+    logInfo $1 $2
+}
+
+#PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
+function procesarArchivos(){	
+	
+for file in $1
+ do
+	if VerificarTipo "$file";
+	then 
+		if VerificarFormato "$file";
+		then 
+			if verificarCOD_GESTION "$file";
+			then
+				if verificarCOD_NORMA "$file";
+				then
+					if verificarCOD_EMISOR "$file";
+					then
+						if verificar_FECHA_GESTION "$file";
+						then
+							echo "CAMINO FELIZ"
+							aceptarArchivo $file
+						fi	
+					fi	
+				fi	
+			fi
+		fi
+	fi		
+done 
+}
+
 
 #VERIFICA ARCHIVOS QUE SEAN SOLO DE TEXTO
-
 function VerificarTipo(){	
 	
 local tipe=`file $1`	
 
 if !(echo $tipe | grep '.*text$' &>/dev/null) 
 	then 
-		#../mover.sh $1 "$HOME/Tp"
+		rechazarArchivo $1
+		logInfo "Rechazado  ${1##*/}  - Tipo invalido" "INFO"
 		return 1
 	else
 		return 0
@@ -28,6 +66,7 @@ function VerificarFormato(){
 if !(echo ${1##*/} | grep '^.*_.*_.*_[1-9]\{1,\}_[^_]*$' &>/dev/null) 
 	then 
 		#../mover.sh $1 "$RECHDIR"
+		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto" "INFO"
 		return 1
 	else
 		return 0
@@ -43,6 +82,7 @@ local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/
 if !(grep "^$codgestion;.*;.*;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
 	then 
 		#../mover.sh $1 "$RECHDIR"
+		logInfo "Rechazado ${1##*/} - Gestion inexistente" "INFO"
 		return 1
 	else
 		return 0
@@ -58,7 +98,8 @@ local codnorma=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\2/g'
 
 if !(grep "^$codnorma;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
 	then 
-		#../mover.sh $1 "$RECHDIR"
+		rechazar#../mover.sh $1 "$RECHDIR"
+		logInfo "Rechazado ${1##*/} - Norma inexistente" "INFO"
 		return 1
 	else
 		return 0 
@@ -75,6 +116,7 @@ local codemisor=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\3/g
 if !(grep "^$codemisor;.*;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
 	then 
 		#../mover.sh $1 "$RECHDIR"
+		logInfo "Rechazado ${1##*/} - Emisor inexistente" "INFO"
 		return 1
 	else
 		return 0
@@ -99,7 +141,7 @@ fi
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
 		#../mover.sh $1 "$RECHDIR"
-		echo "fecha invalida"
+		logInfo "Rechazado $archi - Fecha no coresponde a Gestion" "INFO"
 	else
 		return 0
 fi
@@ -156,9 +198,13 @@ fi
 
 function aceptarArchivo(){
 	
-	#../mover.sh $file "$ACEPDIR"
-	echo $1	
+	../mover.sh $1 "$ACEPDIR"
 	
+}
+
+function rechazarArchivo(){
+	
+	../mover.sh $1 "$RECHDIR"
 }
 
 
