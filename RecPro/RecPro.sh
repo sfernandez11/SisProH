@@ -18,10 +18,10 @@ do
 				then
 					if verificarCOD_EMISOR "$file";
 					then
-						if verificarCOD_FECHA "$file";
+						if verificar_FECHA_GESTION "$file";
 						then
 							echo "CAMINO FELIZ"
-							aceptarArchivo $file
+							#aceptarArchivo $file
 						else
 							echo "escribir log"
 						fi	
