@@ -167,55 +167,29 @@ function chequearFechaValidaRangoGestion(){
 	local resultGrep=`grep "^$codigoGestion;" $archivoMaestroGestiones`	
 	local fechaDesde=`echo $resultGrep | cut -d ";" -f2`
 	local fechaHasta=`echo $resultGrep | cut -d ";" -f3`
-
-	local anioDesde=`echo $fechaDesde | cut -d "/" -f3`
-	local anioHasta=`echo $fechaHasta | cut -d "/" -f3`
+	
+	#obtengo datos de la fecha de la norma para re formatearla para analisis
 	local anio=`echo $1 | cut -d "/" -f3`
-	#caso en que el anio no esta en la gestion	
-	if [ $anio -lt $anioDesde -o $anio -gt $anioHasta ]
-	then
-		return 1
-	fi
 	local mes=`echo $1 | cut -d "/" -f2`
-	#caso en que el anio esta en la gestion pero en el anio del comienzo de la misma.
-	if [ $anio -eq $anioDesde ]
+	local dia=`echo $1 | cut -d "/" -f1`	
+	#obtengo datos de las fechas de las gestiones para reformatearlas para analisis
+	local anioDesde=`echo $fechaDesde | cut -d "/" -f3`
+	local mesDesde=`echo $fechaDesde | cut -d "/" -f2`
+	local diaDesde=`echo $fechaDesde | cut -d "/" -f1`
+	local anioHasta=`echo $fechaHasta | cut -d "/" -f3`
+	local mesHasta=`echo $fechaHasta | cut -d "/" -f2`
+	local diaHasta=`echo $fechaHasta | cut -d "/" -f1`
+	#los reformateo como un unico valor sin separador por orden de relevancia
+	fechaDesde="$anioDesde$mesDesde$diaDesde"
+	fechaHasta="$anioHasta$mesHasta$diaHasta"
+	local fechaNorma="$anio$mes$dia"
+
+	if [ "$fechaNorma" -ge "$fechaDesde" -a "$fechaNorma" -le "$fechaHasta"  ]
 	then
-		local mesDesde=`echo $fechaDesde | cut -d "/" -f2`
-		if [ $mes -gt $mesDesde ]
-		then
-			return 0
-		elif [ $mes -eq $mesDesde ]
-		then
-			local dia=`echo $1 | cut -d "/" -f1`
-			local diaDesde=`echo $fechaDesde | cut -d "/" -f1`
-			if [ $dia -ge $diaDesde ]
-			then
-				return 0
-			fi
-			return 1
-		fi
-		else
-			return 1
-	fi
-	#caso en que el anio esta en la gestion pero en el anio de finalizacion de la misma.
-	if [ $anio -eq $anioHasta ]
-	then
-		if [ $mes -lt $mesHasta ]
-		then
-			return 0
-		elif [ $mes -eq $mesHasta ]
-		then
-			local dia=`echo $1 | cut -d "/" -f1`
-			local diaHasta=`echo $fechaHasta | cut -d "/" -f1`
-			if [ $dia -le $diaHasta ]
-			then
-				return 0
-			fi
-			return 1
-		fi
-		else
-			return 1
-	fi
+		return 0
+	else
+		return 1
+	fi	
 }
 
 #chequea que el $2 codigo de firma sea valido para el $1 codigoEmisor
@@ -226,7 +200,7 @@ function chequearCodigoFirmaValido() {
 	local firmaDigital=`echo $resultaGrep | cut -d ";" -f3`
 	if [ $2 = $firmaDigital ]
 	then
-		retun 0
+		return 0
 	fi
 	return 1	
 }
