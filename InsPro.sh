@@ -15,6 +15,14 @@
 # importo mi archivo con funciones
 source InsFunctions.sh
 
+declare -a variables
+declare -a messages
+declare -a installed
+declare -a values
+
+
+initialize
+
 GRUPO=$PWD/grupo02
 CONFDIR=conf
 
@@ -23,20 +31,7 @@ if [ -f $GRUPO/$CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
   exit 0
-else
-  # valores por defecto de las variables de ambiente
 
-  MAEDIR=mae
-  NOVEDIR=novedades
-  ACEPDIR=a_protocolarizar
-  RECHDIR=rechazados
-  PROCDIR=protocolizados
-  INFODIR=informes
-  DUPDIR=dup
-  LOGDIR=log
-  BINDIR=bin
-  DATASIZE=100
-  LOGSIZE=400
 fi
 
 # TODO: CONFDIR ya deberia existir
@@ -68,17 +63,7 @@ do
     logInfo "Instalacion reiniciada .."
   fi
   # pido al usuario que ingrese los valores de las variables
-  setDir MAEDIR "maestros y tablas"
-  setDir BINDIR "instalación de los ejecutables"
-  setDir NOVEDIR "recepción de documentos para protocolización"
-  setDir ACEPDIR "grabación de las Novedades aceptadas"
-  setDir RECHDIR "grabación de Archivos rechazados"
-  setDir PROCDIR "grabación de los documentos protocolizados"
-  setDir INFODIR "grabación de los informes de salida"
-  setDir DUPDIR "repositorio de archivos duplicados"
-  setDir LOGDIR "logs"
-  setVariable LOGSIZE "tamaño máximo para cada archivo de log en Kbytes"
-  setVariable DATASIZE "espacio mínimo libre para el arribo de las novedades en Mbytes"
+  askVariables
 
   # se hacen todas las validaciones
 
