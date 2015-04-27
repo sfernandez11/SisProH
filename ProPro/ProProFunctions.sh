@@ -5,8 +5,7 @@
 
 #recibe por parametros: 
 # $1 archivo de input
-# $2 tipo de registro siendo "HIST" registros historicos, "CORR" registros corrientes, y "RECH" registros rechazados
-# $3 en caso de ser un registro rechazado, en esta variable viene el motivo del rechazo
+# $2 tipo de archivo siendo "HIST" archivos historicos, "CORR" archivos corrientes
 
 function writeRecordOutput() {
 	local i=0
@@ -17,43 +16,63 @@ function writeRecordOutput() {
 			i=$(( i + 1))
 			continue
 		fi
+		local registroRechazado=''
+		local motivoRechazo=''
 		local fechaNorma=`echo $line | sed 's/^\([^;]*\);\(.*\)/\1/'`
-		#echo "$fechaNorma"
-		local anioNorma=`echo $fechaNorma | cut -d "/" -f3`
-		#echo "$anioNorma"
-		local datosRestantesRegistro=`echo $line | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\3;\4;\5;\6;\7;\8;\9/'`
-		#echo "$datosRestantesRegistro"
-		local datosFinalRegistro=`echo $1 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
-		#echo "$datosFinalRegistro"
+		local fechaNormaValida=$(chequearFechaValida $fechaNorma)
+		if [ fechaNormaValida -eq 1 ]
+		then
+			registroRechazado='SI'
+			motivoRechazo='Fecha invalida'
+		fi
 		#codigo de gestion para cuando guardo los archivos
-		local codigoGestion=`echo $1 | cut -d "_" -f1`
-		#echo "$codigoGestion"
+		codigoGestion=`echo $1 | cut -d "_" -f1`
+		if [ fechaNormaValida -eq 0 ]
+		then
+			local fechaNormaEnRangoGestion=$(chequearFechaValidaRangoGestion $fechaNorma)
+			if [ fechaNormaEnRangoGestion -eq 1 ]
+			then
+				registroRechazado='SI'
+				motivoRechazo='Fecha fuera del rango de la gestion'
+			fi
+		fi
+		local anioNorma=`echo $fechaNorma | cut -d "/" -f3`
+		local datosRestantesRegistro=`echo $line | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\3;\4;\5;\6;\7;\8;\9/'`
+		local datosFinalRegistro=`echo $1 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
 		local codigoNorma=`echo $1 | cut -d "_" -f2`
-		#echo "$codigoNorma"	 
 		numeroNorma=0		
 			
 		if [ $2 = "HIST" ]
 		then
 			numeroNorma=`echo $line | cut -d ";" -f2`
-			#echo "$numeroNorma"
+			if [ $numeroNorma -le 0 ]
+			then
+				registroRechazado='SI'
+				motivoRechazo='Numero de norma invalido'
+			fi
 		elif [ "$2" = "CORR" ]
 		then
 			local codigoEmisor=`echo $1 | cut -d "_" -f3`
-			local anioEnCurso=`date +%d-%m-%Y | cut -d "-" -f3`
-			obtenerNumeroNormaCorriente $codigoGestion $anioEnCurso $codigoEmisor $codigoNorma
+			local codigoFirma=`echo $datosRestantesRegistro | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\6/'`
+			local codigoFirmaValido=$(chequearCodigoFirmaValido $codigoEmisor $codigoFirma)
+			if [ codigoFirmaValido -eq 1 ]
+			then
+				registroRechazado='SI'
+				motivoRechazo='Codigo de firma invalido'
+			else
+				local anioEnCurso=`date +%d-%m-%Y | cut -d "-" -f3`
+				obtenerNumeroNormaCorriente $codigoGestion $anioEnCurso $codigoEmisor $codigoNorma
+			fi
 		fi
-		if [ $2 = "HIST" -o $2 = "CORR" ]
+		if [ -z $registroRechazado ]
 		then
 			local registroGuardar="$1;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
 			$(chequearOCreaSubdirectorioCodGestion $codigoGestion)						
 			echo "$registroGuardar" >> $PROCDIR/$codigoGestion/$anioNorma.$codigoNorma
 			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma" 		
-		elif [ $2 = "RECH" ]
-		then
-			echo "$1;"$3";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
-			$BINDIR/glog.sh "ProPro" "Se guardo el registro $1;$3;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
 		else
-			return 1
+			echo "$1;"$motivoRechazo";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
+			$BINDIR/glog.sh "ProPro" "Se guardo el registro $1;$motivoRechazo;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
 		fi
 	done < "$1"
 	$BINDIR/glog.sh "ProPro" "Se termino de procesar el archivo $1"
@@ -117,3 +136,98 @@ function chequearOCreaSubdirectorioCodGestion () {
 	fi
 	return 1
 }
+
+#Chequea si la fecha con formato dd/mm/aaaa es una fecha valida. En caso de serlo devuelve 0, sino 1.
+#Recibe en $1 la fecha a analizar
+function chequearFechaValida() {
+	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
+	local dia=`echo $1 | cut -d "/" -f1`
+	if [ $dia -lt 1 -o $dia -gt 31 ]
+	then
+		return 1
+	fi
+	local mes=`echo $1 | cut -d "/" -f2`	
+	if [ $mes -lt 1 -o $mes -gt 12 ]
+	then
+		return 1
+	fi
+	local anio=`echo $1 | cut -d "/" -f3`
+	if [ $anio -lt 1900 -o $anio -gt 2015 ]
+	then
+		return 1
+	fi
+	return 0
+}
+
+#Chequea si la fecha pasada en parametro $1 esta en el rango de la gestion.
+#En caso de estar devuelve 0, en caso de no, 1.
+function chequearFechaValidaRangoGestion(){
+	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma esta dentro del rango de la gestion"
+	local archivoMaestroGestiones=$MAEDIR/gestiones.mae
+	local resultGrep=`grep "^$codigoGestion;" $archivoMaestroGestiones`	
+	local fechaDesde=`echo $resultGrep | cut -d ";" -f2`
+	local fechaHasta=`echo $resultGrep | cut -d ";" -f3`
+
+	local anioDesde=`echo $fechaDesde | cut -d "/" -f3`
+	local anioHasta=`echo $fechaHasta | cut -d "/" -f3`
+	local anio=`echo $1 | cut -d "/" -f3`
+	#caso en que el anio no esta en la gestion	
+	if [ $anio -lt $anioDesde -o $anio -gt $anioHasta ]
+	then
+		return 1
+	fi
+	local mes=`echo $1 | cut -d "/" -f2`
+	#caso en que el anio esta en la gestion pero en el anio del comienzo de la misma.
+	if [ $anio -eq $anioDesde ]
+	then
+		local mesDesde=`echo $fechaDesde | cut -d "/" -f2`
+		if [ $mes -gt $mesDesde ]
+		then
+			return 0
+		elif [ $mes -eq $mesDesde ]
+		then
+			local dia=`echo $1 | cut -d "/" -f1`
+			local diaDesde=`echo $fechaDesde | cut -d "/" -f1`
+			if [ $dia -ge $diaDesde ]
+			then
+				return 0
+			fi
+			return 1
+		fi
+		else
+			return 1
+	fi
+	#caso en que el anio esta en la gestion pero en el anio de finalizacion de la misma.
+	if [ $anio -eq $anioHasta ]
+	then
+		if [ $mes -lt $mesHasta ]
+		then
+			return 0
+		elif [ $mes -eq $mesHasta ]
+		then
+			local dia=`echo $1 | cut -d "/" -f1`
+			local diaHasta=`echo $fechaHasta | cut -d "/" -f1`
+			if [ $dia -le $diaHasta ]
+			then
+				return 0
+			fi
+			return 1
+		fi
+		else
+			return 1
+	fi
+}
+
+#chequea que el $2 codigo de firma sea valido para el $1 codigoEmisor
+function chequearCodigoFirmaValido() {
+	$BINDIR/glog.sh "ProPro" "Chequeando que la firma del emisor sea valida"	
+	local archivoEmisores=$MAEDIR/emisores.mae		
+  	local resultaGrep=`grep "^$1;" $archivoEmisores`
+	local firmaDigital=`echo $resultaGrep | cut -d ";" -f3`
+	if [ $2 = $firmaDigital ]
+	then
+		retun 0
+	fi
+	return 1	
+}
+
