@@ -13,10 +13,10 @@
 #                                                                      #
 # PRE-CONDICIONES                                                      #
 # No se ejecuta si la inicializacion del ambiente no fue realizada     #
-#																	   #
+#                                                                      #
 ########################################################################
-#       															   #
-# FUNCION                     		                                   #
+#                                                                      #
+# FUNCION                                                              #
 # Verifica si el directio NOVEDIR tiene archivos a procesar            #
 # 	Si hay verifica si es correcto                                     #
 # 		-Si es correcto lo mueve al directorio ACEPDIR                 #
@@ -32,25 +32,25 @@
 ########################################################################
 source RecFunctions.sh
 
-MAEDIR=mae
-NOVEDIR=novedades
-ACEPDIR=a_protocolarizar
+MAEDIR=../MAEDIR
+NOVEDIR=../NOVEDIR/*
+ACEPDIR=../ACEPDIR
 RECHDIR=rechazados
 LOGDIR=log
 SLEEP_TIME=$1
 nroCiclo=0
+INI=0
 
-#Valido si el fue ambiente inicializado correctamente
-if [-n "$INI"] # ambiente correcto, $VAL con valor 0
+#Valido si el ambiente fue inicializado correctamente
+if [ -n $INI ] # ambiente correcto, $VAL con valor 0
 	then
-		logInfo "Iniciado Demonio - Ciclo: $nroCiclo" "INFO"
-		while [[ true ]]; do
-			procesarArchivos
+		#while [[ true ]]; do
+		    logInfo "Desperta Demonio - Ciclo: $nroCiclo" "INFO"
+			procesarNovedades $NOVEDIR $MAEDIR $ACEPDIR
 			let nroCiclo++
 			logInfo "Dormir Demonio" "INFO"
-			sleep $SLEEP_TIME
-			logInfo "Desperto Demonio - Ciclo: $nroCiclo" "INFO"
-		done 
+			sleep $SLEEP_TIME	
+		#done 
 	else
 		logError "El ambiente no se inicializo correctamente" "ERR"
 		logError "No es posible su ejecucion" "ERR"

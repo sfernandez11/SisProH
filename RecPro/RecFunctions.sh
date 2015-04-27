@@ -5,6 +5,8 @@
 #                                                                      #
 ########################################################################
 
+
+
 #INFORMA AL LOG SOBRE LA EJECUCION
 function logInfo(){
     echo RecPro $1 $2
@@ -16,7 +18,7 @@ function logError(){
 }
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
-function procesarArchivos(){	
+function procesarNovedades(){		
 	
 for file in $1
  do
@@ -24,16 +26,16 @@ for file in $1
 	then 
 		if VerificarFormato "$file";
 		then 
-			if verificarCOD_GESTION "$file";
+			if verificarCOD_GESTION "$file" "$2/gestion.mae";
 			then
-				if verificarCOD_NORMA "$file";
+				if verificarCOD_NORMA "$file" "$2/normas.mae";
 				then
-					if verificarCOD_EMISOR "$file";
+					if verificarCOD_EMISOR "$file" "$2/emisores.mae";
 					then
-						if verificar_FECHA_GESTION "$file";
+						if verificar_FECHA_GESTION "$file" "$2/gestiones.mae";
 						then
 							echo "CAMINO FELIZ"
-							aceptarArchivo $file
+							aceptarArchivo $file $3
 						fi	
 					fi	
 				fi	
@@ -79,7 +81,7 @@ function verificarCOD_GESTION(){
 		
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`
 
-if !(grep "^$codgestion;.*;.*;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
+if !(grep "^$codgestion;.*;.*;.*;" "$2" &>/dev/null)
 	then 
 		#../mover.sh $1 "$RECHDIR"
 		logInfo "Rechazado ${1##*/} - Gestion inexistente" "INFO"
@@ -96,9 +98,9 @@ function verificarCOD_NORMA(){
 	
 local codnorma=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\2/g'`
 
-if !(grep "^$codnorma;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
+if !(grep "^$codnorma;.*;" "$2" &>/dev/null)
 	then 
-		rechazar#../mover.sh $1 "$RECHDIR"
+		#../mover.sh $1 "$RECHDIR"
 		logInfo "Rechazado ${1##*/} - Norma inexistente" "INFO"
 		return 1
 	else
@@ -113,7 +115,7 @@ function verificarCOD_EMISOR(){
 	
 local codemisor=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\3/g'`
 
-if !(grep "^$codemisor;.*;.*;" "$HOME/Tp/mae.txt" &>/dev/null)
+if !(grep "^$codemisor;.*;.*;" "$2" &>/dev/null)
 	then 
 		#../mover.sh $1 "$RECHDIR"
 		logInfo "Rechazado ${1##*/} - Emisor inexistente" "INFO"
@@ -129,8 +131,8 @@ function verificar_FECHA_GESTION(){
 
 local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\5/g'`
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
-local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$HOME/Tp/maeGES.txt" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\2/g'`
-local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$HOME/Tp/maeGES.txt" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
+local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\2/g'`
+local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
 
 if [ $fecha_hasta = "NULL" ]
 	then
@@ -141,7 +143,7 @@ fi
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
 		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado $archi - Fecha no coresponde a Gestion" "INFO"
+		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion" "INFO"
 	else
 		return 0
 fi
@@ -153,13 +155,13 @@ local anio_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9
 local mes_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\2-g'`
 local dia_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\1-g'`
 
-local anio_desde=`echo "$2" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\3-g'`
-local mes_desde=`echo "$2" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\2-g'`
-local dia_desde=`echo "$2" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\1-g'`
+local anio_desde=`echo "$2" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\3-g'`
+local mes_desde=`echo "$2" | sed 's-\([0-3][0-9]\)\/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\2-g'`
+local dia_desde=`echo "$2" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\1-g'`
 
-local anio_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\3-g'`
-local mes_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\2-g'`
-local dia_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\1-g'`
+local anio_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)\/\([1-2][0-9][0-9][0-9]\)-\3-g'`
+local mes_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\2-g'`
+local dia_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\1-g'`
 
 
 if [ $anio_desde = $anio_file ] || [ $anio_file = $anio_hasta ]
@@ -198,13 +200,13 @@ fi
 
 function aceptarArchivo(){
 	
-	../mover.sh $1 "$ACEPDIR"
+	../mover.sh $1 $2
 	
 }
 
 function rechazarArchivo(){
 	
-	../mover.sh $1 "$RECHDIR"
+	../mover.sh $1 $2
 }
 
 
