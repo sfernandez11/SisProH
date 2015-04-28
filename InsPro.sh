@@ -91,5 +91,7 @@ done
 createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
 
+writeConf
+
 # TODO: crear archivo .conf
 # TODO: Limpiar variables
