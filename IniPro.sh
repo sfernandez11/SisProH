@@ -6,71 +6,124 @@
 # >$. IniPro.sh 
 #------------------------------------------------------------------------------------------------------------
 
-#ambiente ya inicializado, si quiere reiniciar termine su sesión e ingrese nuevamente (Grabar en el log y terminar la ejecución)
+source IniFunctions.sh
 
-#Es indispensable contar con el archivo de configuración, 
-
-#los comandos, 
-
-#archivos maestros 
-
-#y tablas con los permisos adecuados.
-
-
-#Continúa con la asignación de valor a un conjunto de variables de ambiente 
+if ! checkAmbiente; then 
+	return 1
+fi
 
 GRUPO=$PWD/grupo02
+
+if confFileNotFound; then
+	echo "No existe el archivo de configuracion"
+	return 1
+fi
+
 CONFDIR=$GRUPO/conf
 CONFFILE=$CONFDIR/InsPro.conf
 
 echo "Exportando variables de ambiente..."
 
-NOVEDIR=`grep "NOVEDIR" $CONFFILE | cut -s -f2 -d'='`
+echo "Directorio raiz del sistema: "$GRUPO
+echo "Directorio de configuracion: "$CONFDIR
 
-echo "Nove dir es: "$NOVEDIR
-export GRUPO="$PWD/grupo02"
-echo "Grupo: "$GRUPO
-export $NOVEDIR #="$GRUPO/novedades"
-echo "Novedir: "$NOVEDIR
-export RECHDIR="$GRUPO/rechazados"
-echo "Rechdir: "$RECHDIR
-export BINDIR="$GRUPO/bin"
-echo "Bindir: "$BINDIR
-export MAEDIR="$GRUPO/mae"
-echo "Maedir: "$MAEDIR
-export REPODIR="$GRUPO/informes"
-echo "Repodri: "$REPODIR
+if [ "$BINDIR" == "" ]; then
+	BINDIR=`grep "BINDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de Ejecutables: BINDIR "$BINDIR
+	#TODO Listar files en BINDIR
+fi
+
+if [ "$MAEDIR" == "" ]; then
+	MAEDIR=`grep "MAEDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de Maestros y Tablas: MAEDIR "$MAEDIR
+	#TODO Listar files in MAEDIR
+fi
+
+if [ "$NOVEDIR" == "" ]; then
+	NOVEDIR=`grep "NOVEDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de recepción de documentos para protocolización: NOVEDIR "$NOVEDIR
+fi
+
+if [ "$DATASIZE" == "" ]; then
+	DATASIZE=`grep "DATASIZE" $CONFFILE | cut -s -f2 -d'='`
+	echo "DATASIZE es: "$DATASIZE
+fi
+
+if [ "$ACEPDIR" == "" ]; then
+	ACEPDIR=`grep "ACEPDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de Archivos Aceptados: ACEPDIR "$ACEPDIR
+fi
+
+if [ "$RECHDIR" == "" ]; then
+	RECHDIR=`grep "RECHDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de Archivos Rechazados: RECHDIR "$RECHDIR
+fi
+
+if [ "$PROCDIR" == "" ]; then
+	PROCDIR=`grep "PROCDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio de Archivos Protocolizados: PROCDIR "$PROCDIR
+fi
+
+if [ "$INFODIR" == "" ]; then
+	INFODIR=`grep "INFODIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio para informes y estadísticas: INFODIR "$INFODIR
+fi
+
+if [ "$DUPDIR" == "" ]; then
+	DUPDIR=`grep "DUPDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Nombre para el repositorio de duplicados: DUPDIR "$DUPDIR
+fi
+
+if [ "$LOGDIR" == "" ]; then
+	LOGDIR=`grep "LOGDIR" $CONFFILE | cut -s -f2 -d'='`
+	echo "Directorio para Archivos de Log: LOGDIR "$LOGDIR
+fi
+
+if [ "$LOGSIZE" == "" ]; then
+	LOGSIZE=`grep "LOGSIZE" $CONFFILE | cut -s -f2 -d'='`
+	echo "LOGSIZE: "$LOGSIZE
+fi
+
+export GRUPO
+export MAEDIR
+export NOVEDIR
+export DATASIZE
+export ACEPDIR
+export RECHDIR
+export PROCDIR
+export INFODIR
+export DUPDIR
+export LOGDIR
+export LOGSIZE
+
 export PATH=$PATH:$BINDIR
-echo "PATH: "$PATH
+echo "Se agrego $BINDIR al PATH. PATH= "$PATH
 
 echo "Fin de exportar variables de ambiente"
 
+echo "Verificando la existencia de ejecutables..."
+if [ ! checkBinFiles ]; then
+	echo "No existen los comandos ejecutables"
+	return 1
+fi
 
-#Directorio de Configuración: CONFDIR (mostrar path y listar archivos)
-#Directorio de Ejecutables: BINDIR (mostrar path y listar archivos)
-#Directorio de Maestros y Tablas: MAEDIR (mostrar path y listar archivos)
-#Directorio de recepción de documentos para protocolización: NOVEDIR
-#Directorio de Archivos Aceptados: ACEPDIR
-#Directorio de Archivos Rechazados: RECHDIR
-#Directorio de Archivos Protocolizados: PROCDIR
-#Directorio para informes y estadísticas: INFODIR
-#Nombre para el repositorio de duplicados: DUPDIR
-#Directorio para Archivos de Log: LOGDIR (mostrar path y listar archivos)
-#Estado del Sistema: INICIALIZADO
+echo "Verificando la existencia de archivos maestros..."
+if [ ! checkMaeFiles ]; then
+	echo "No existen los archivos maestros"
+	return 1
+fi
 
+echo "Verificando la existencia de tablas maestras..."
+if [ ! checkTableFiles ]; then
+	echo "No existen las tablas maestras"
+	return 1
+fi
 
-#Ofrece arrancar automáticamente el comando de recepción de documentos para protocolización.
+echo "Asignando permisos de ejecucion..."
+checkPerm
 
-#“Desea efectuar la activación de RecPro?” Si – No
+echo "Estado del Sistema: INICIALIZADO"
 
-#6.1.
-#Si el usuario no desea arrancar el demonio RecPro, entonces explicar cómo hacerlo con el
-#comando Start
-#6.2.
-#Si el usuario desea arrancar el demonio RecPro, activarlo (SOLO SI NO EXISTE OTRO
-#RecPro CORRIENDO) y explicar cómo detenerlo usando el comando Stop.
-#6.3.
-#Mostrar mensaje y grabar en el log
-#RecPro corriendo bajo el no.: <Process Id de RecPro>
+askStartDeamon
 
 #Cerrar archivo de log y terminar proceso
