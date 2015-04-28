@@ -9,12 +9,12 @@
 
 #INFORMA AL LOG SOBRE LA EJECUCION
 function logInfo(){
-    echo RecPro $1 $2
+    echo RecPro $1
 }
 
 #INFORMA AL LOG DE ERRORES OCURRIDOS EN LA EJECUCION
 function logError(){
-    logInfo $1 $2
+    logInfo $1 "ERROR"
 }
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
@@ -144,6 +144,7 @@ if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
 		#../mover.sh $1 "$RECHDIR"
 		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion" "INFO"
+		return 1
 	else
 		return 0
 fi
@@ -192,7 +193,6 @@ if [ $anio_desde = $anio_file ] || [ $anio_file = $anio_hasta ]
 fi
 }		
 	
-
 # Acepta los archivos con formato de nombre correcto a 
 # ACEPDIR/<cod_gestion>/<nombredelArchivo>
 # Si el subdirectorio <cod_gestion> no existe se crea.
