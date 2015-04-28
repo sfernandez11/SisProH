@@ -39,7 +39,9 @@ function checkTableFiles(){
 }
 
 function checkPerm(){
+	chmod +x $BINDIR"/Start.sh"
 	chmod +x $BINDIR"/RecPro.sh"
+	chmod +x $BINDIR"/Stop.sh"
 }
 
 
@@ -130,3 +132,50 @@ function checkAmbiente(){
 	return 0
 }
 
+function ambienteVacio(){
+
+	if [ "$BINDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$MAEDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$NOVEDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$DATASIZE" == "" ]; then
+		return 1
+	fi
+
+	if [ "$ACEPDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$RECHDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$PROCDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$INFODIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$DUPDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$LOGDIR" == "" ]; then
+		return 1
+	fi
+
+	if [ "$LOGSIZE" == "" ]; then
+		return 1
+	fi
+	return 0
+}

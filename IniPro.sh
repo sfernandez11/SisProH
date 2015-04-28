@@ -9,14 +9,14 @@
 source IniFunctions.sh
 
 if ! checkAmbiente; then 
-	return 1
+	exit 1
 fi
 
 GRUPO=$PWD/grupo02
 
 if confFileNotFound; then
 	echo "No existe el archivo de configuracion"
-	return 1
+	exit 1
 fi
 
 CONFDIR=$GRUPO/conf
