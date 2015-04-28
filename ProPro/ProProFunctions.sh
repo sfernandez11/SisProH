@@ -19,22 +19,18 @@ function writeRecordOutput() {
 		local registroRechazado=''
 		local motivoRechazo=''
 		local fechaNorma=`echo $line | sed 's/^\([^;]*\);\(.*\)/\1/'`
-		local fechaNormaValida=$(chequearFechaValida $fechaNorma)
-		if [ fechaNormaValida -eq 1 ]
-		then
-			registroRechazado='SI'
-			motivoRechazo='Fecha invalida'
-		fi
 		#codigo de gestion para cuando guardo los archivos
 		codigoGestion=`echo $1 | cut -d "_" -f1`
-		if [ fechaNormaValida -eq 0 ]
+		if FECHA_NORMA_VALIDA=$(chequearFechaValida $fechaNorma)
 		then
-			local fechaNormaEnRangoGestion=$(chequearFechaValidaRangoGestion $fechaNorma)
-			if [ fechaNormaEnRangoGestion -eq 1 ]
+			if ! FECHA_NORMA_EN_RANGO_GESTION=$(chequearFechaValidaRangoGestion $fechaNorma)
 			then
 				registroRechazado='SI'
 				motivoRechazo='Fecha fuera del rango de la gestion'
 			fi
+		else
+			registroRechazado='SI'
+			motivoRechazo='Fecha invalida'
 		fi
 		local anioNorma=`echo $fechaNorma | cut -d "/" -f3`
 		local datosRestantesRegistro=`echo $line | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\3;\4;\5;\6;\7;\8;\9/'`
@@ -45,6 +41,11 @@ function writeRecordOutput() {
 		if [ $2 = "HIST" ]
 		then
 			numeroNorma=`echo $line | cut -d ";" -f2`
+			if [ -n $numeroNorma ] 
+			then
+				$BINDIR/glog.sh "ProPro" "Numero de norma no es un numero, se procede a convertir en 0 que es numero de norma invalida"
+				numeroNorma=0
+			fi
 			if [ $numeroNorma -le 0 ]
 			then
 				registroRechazado='SI'
@@ -54,8 +55,7 @@ function writeRecordOutput() {
 		then
 			local codigoEmisor=`echo $1 | cut -d "_" -f3`
 			local codigoFirma=`echo $datosRestantesRegistro | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\6/'`
-			local codigoFirmaValido=$(chequearCodigoFirmaValido $codigoEmisor $codigoFirma)
-			if [ codigoFirmaValido -eq 1 ]
+			if ! CODIGO_DE_FIRMA_VALIDO=$(chequearCodigoFirmaValido $codigoEmisor $codigoFirma)
 			then
 				registroRechazado='SI'
 				motivoRechazo='Codigo de firma invalido'
@@ -67,7 +67,7 @@ function writeRecordOutput() {
 		if [ -z $registroRechazado ]
 		then
 			local registroGuardar="$1;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
-			$(chequearOCreaSubdirectorioCodGestion $codigoGestion)						
+			$(chequearOCreaSubdirectorio $PROCDIR $codigoGestion)						
 			echo "$registroGuardar" >> $PROCDIR/$codigoGestion/$anioNorma.$codigoNorma
 			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma" 		
 		else
@@ -85,19 +85,27 @@ return 0
 #Parametros $1 codigoGestion $2 anioEnCurso $3 codigoEmisor $4 codigoNorma
 function obtenerNumeroNormaCorriente () {
 	$BINDIR/glog.sh "ProPro" "Entrando a obtener el numero de la norma de la tabla axg.tab"
-	archivo=$MAEDIR/tab/axg.tab
-	local resultadoGrep=`grep -n "^[^;]*;$1;$2;$3;$4;" $archivo`
+	local archivo=$MAEDIR/tab/axg.tab
+	#Me creo un archivo temporal para mover el original y trabajar con el temporal y luego de modificarlo, renombrar.
+	$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
+	cp $archivo $MAEDIR/tab/axg.tabtemp
+	archivoTemp=$MAEDIR/tab/axg.tabtemp
+	echo $archivoTemp
+	$(chequearOCreaSubdirectorio $MAEDIR/tab "ant")
+	$BINDIR/mover.sh "$archivo" "$MAEDIR/tab/ant" "ProPro"
+	$BINDIR/glog.sh "ProPro" "Tabla de contadores preservada antes de su modificación en MAEDIR/tab/ant"
+	local resultadoGrep=`grep -n "^[^;]*;$1;$2;$3;$4;" $archivoTemp`
 	if [ -z $resultadoGrep ]
 	then
 		$BINDIR/glog.sh "ProPro" "No se encontro la norma, procediendo a crear un contador para el codigo de norma y emisor"
 		numeroNorma=1
 		#Agrego al final de la tabla un nuevo contador para el codigo de norma y emisor
-		local cantLineasArchivo=`wc -l $archivo | cut -d " " -f1`
-		local idContadorActual=`awk "NR == $cantLineasArchivo" $archivo | cut -d ";" -f1`
+		local cantLineasArchivo=`wc -l $archivoTemp | cut -d " " -f1`
+		local idContadorActual=`awk "NR == $cantLineasArchivo" $archivoTemp | cut -d ";" -f1`
 		(( idContadorActual++ ))
 		local usuario=`whoami`
 		fecha=`date +%d/%m/%Y`
-		echo "$idContadorActual;"$1";"$2";"$3";"$4";2;"$usuario";"$fecha"" >> $archivo
+		echo "$idContadorActual;"$1";"$2";"$3";"$4";2;"$usuario";"$fecha"" >> $archivoTemp
 		$BINDIR/glog.sh "ProPro" "Agregado el contador para el codigo de norma $4 y codigo de emisor $3"
 	else
 		$BINDIR/glog.sh "ProPro" "Se encontro la norma en la tabla, se tomara el numero de norma y se actualizara el valor en la tabla"
@@ -106,32 +114,34 @@ function obtenerNumeroNormaCorriente () {
 		$(incrementarNumeroEnTabla $(( numeroNorma + 1)) $numeroLinea)
 		$BINDIR/glog.sh "ProPro" "Se incremento el numero de norma en la tabla para el codigo de norma $4 y codigo de emisor $3"
 	fi
+	#Renombro mi archivo temporal de tabla de contadores por su nombre original.
+	mv $archivoTemp $archivo
 	return 0	
 }
 
 #Incrementa en 1 el contador de la tabla para el codigo de norma y emisor utilizado para protocolizar
 #Recibe en $1 el numero de norma a actualizar en contador y en $2 el numero de linea donde hacer la modificacion
 function incrementarNumeroEnTabla () {
-	sed -i ""$2"s/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\1;\2;\3;\4;\5;"$1";\7;\8/" $archivo
+	sed -i ""$2"s/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\1;\2;\3;\4;\5;"$1";\7;\8/" $archivoTemp
 	return 0
 }
 
-#Chequea si el directorio existe. En caso de no existir lo crea.
+#Chequea si el directorio existe. En caso de no existir lo crea. En $1 recibe el directorio donde revisa y en $2 la variable del directorio a crear.
 #En caso de existir un archivo con el nombre de lo que seria el nombre del directorio a generar, se elimina el archivo y se crea el directorio.
-function chequearOCreaSubdirectorioCodGestion () {
-	$BINDIR/glog.sh "ProPro" "Chequea si el directorio $1 existe. En caso de no existir lo crea."
-	if [ -d $PROCDIR/$1 ]
+function chequearOCreaSubdirectorio () {
+	$BINDIR/glog.sh "ProPro" "Chequea si el directorio $2 existe. En caso de no existir lo crea."
+	if [ -d $1/$2 ]
 	then
-		$BINDIR/glog.sh "ProPro" "El directorio $1 existe."
+		$BINDIR/glog.sh "ProPro" "El directorio $2 existe."
 		return 0
 	else
-		if [ -f $PROCDIR/$1 ]
+		if [ -f $1/$2 ]
 		then
-			$BINDIR/glog.sh "ProPro" "El directorio $1 no existe pero existe un archivo con ese nombre: se procede a eliminar para poder crear el directorio." "WAR"
-			rm $PROCDIR/$1
+			$BINDIR/glog.sh "ProPro" "El directorio $2 no existe pero existe un archivo con ese nombre: se procede a eliminar para poder crear el directorio." "WAR"
+			rm $1/$2
 		fi	
-		$BINDIR/glog.sh "ProPro" "Crea el directorio $1\."
-		mkdir $PROCDIR/$1
+		$BINDIR/glog.sh "ProPro" "Crea el directorio $2."
+		mkdir $1/$2
 		return 0
 	fi
 	return 1
@@ -167,6 +177,10 @@ function chequearFechaValidaRangoGestion(){
 	local resultGrep=`grep "^$codigoGestion;" $archivoMaestroGestiones`	
 	local fechaDesde=`echo $resultGrep | cut -d ";" -f2`
 	local fechaHasta=`echo $resultGrep | cut -d ";" -f3`
+	if [ $fechaHasta = "NULL" ]
+	then
+		fechaHasta=`date +%d/%m/%Y`
+	fi
 	
 	#obtengo datos de la fecha de la norma para re formatearla para analisis
 	local anio=`echo $1 | cut -d "/" -f3`
@@ -186,6 +200,7 @@ function chequearFechaValidaRangoGestion(){
 
 	if [ "$fechaNorma" -ge "$fechaDesde" -a "$fechaNorma" -le "$fechaHasta"  ]
 	then
+		fechaNormaEnRangoGestion=0
 		return 0
 	else
 		return 1
