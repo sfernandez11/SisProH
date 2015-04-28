@@ -26,20 +26,16 @@ initialize
 GRUPO=$PWD/grupo02
 CONFDIR=conf
 
-# TODO: CONFDIR ya deberia existir
-createDirs $CONFDIR
-
 # TODO: verificar si ya esta instalado y cosas que faltan instalar
 if [ -f $GRUPO/$CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
-  readConf
-  echo ${variables[@]}
   exit 0
 
 fi
 
-
+# TODO: CONFDIR ya deberia existir
+createDirs $CONFDIR
 
 
 # valido version de perl
@@ -95,6 +91,5 @@ done
 createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
 
-writeConf
-
+# TODO: crear archivo .conf
 # TODO: Limpiar variables

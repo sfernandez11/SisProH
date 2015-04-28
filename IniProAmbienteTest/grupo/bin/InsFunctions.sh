@@ -325,7 +325,22 @@ function initialize(){
   index=$(getIndex variables LOGSIZE)
   values[$index]=400
   messages[$index]="tamaño máximo para cada archivo de log en Kbytes"
-
+  #MAEDIR=mae
+  #NOVEDIR=novedades
+  #ACEPDIR=a_protocolarizar
+  #RECHDIR=rechazados
+  #PROCDIR=protocolizados
+  #INFODIR=informes
+  #DUPDIR=dup
+  #LOGDIR=log
+  #BINDIR=bin
+  #DATASIZE=100
+  #LOGSIZE=400
+  #for (( i = 0; i < ${varLength}; i++ ));
+  #do
+  #  echo ${variables[$i]} ${values[$i]} 
+  #  echo ${messages[$i]} ${installed[$i]}
+  #done
 }
 
 function askVariables(){
@@ -335,48 +350,19 @@ function askVariables(){
     then
     	case ${variables[$i]} in
         *DIR)
+          #echo ${variables[$i]} es dir "${messages[$i]}"
           setDir "${variables[$i]}" "${messages[$i]}"
           ;;
         *SIZE)
+          #echo ${variables[$i]} es size
           setVariable "${variables[$i]}" "${messages[$i]}"
           ;;
       esac
     fi
+    #echo ${variables[$i]} ${values[$i]} 
+    #echo ${messages[$i]} ${installed[$i]}
   done
 
-}
-
-function writeConf(){
-  local file="$GRUPO/$CONFDIR/InsPro.conf"
-  local sep='='
-  local now=$(date +"%m-%d-%Y %H:%M:%S")
-  local currentUser=$USER
-  echo $sep > $file
-  for (( i = 0; i < ${varLength}; i++ ));
-  do
-    echo "${variables[$i]}$sep${values[$i]}$sep$currentUser$sep$now" >> $file
-  done
-}
-
-function readConf(){
-  local file="$GRUPO/$CONFDIR/InsPro.conf"
-  local sep=$(head -n 1 "$file")
-  declare -a variables
-  declare -a installed
-  declare -a values
-  
-  local i=0
-  while read line
-  do
-    variables[$i]=$(echo $line | cut -f1 -d"$sep")
-    values[$i]=$(echo $line | cut -f2 -d"$sep")
-    installed[$i]=false
-    
-    echo "${variables[$i]}$sep${values[$i]}"
-    (( i++ ))
-  done < <(grep -v ^.$ $file)
-  
-  #echo ${variables[@]}
 }
 
 #function binariesInstalled(){
