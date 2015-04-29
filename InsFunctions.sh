@@ -354,7 +354,14 @@ function writeConf(){
   echo $sep > $file
   for (( i = 0; i < ${varLength}; i++ ));
   do
-    echo "${variables[$i]}$sep${values[$i]}$sep$currentUser$sep$now" >> $file
+    case ${variables[$i]} in
+        *DIR)
+          echo "${variables[$i]}$sep$GRUPO/${values[$i]}$sep$currentUser$sep$now" >> $file
+          ;;
+        *SIZE)
+          echo "${variables[$i]}$sep${values[$i]}$sep$currentUser$sep$now" >> $file
+          ;;
+    esac
   done
 }
 
