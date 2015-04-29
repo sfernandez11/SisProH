@@ -379,6 +379,18 @@ function readConf(){
   #echo ${variables[@]}
 }
 
+function installBinaries(){
+  cp -a *.sh $GRUPO/$BINDIR
+  cp -a RecPro/*.sh $GRUPO/$BINDIR
+  cp -a ProPro/*.sh $GRUPO/$BINDIR
+}
+
+function installTabs(){
+  cp -a ProPro/ACEPDIR/* $GRUPO/$NOVEDIR
+  cp -a ProPro/MAEDIR/* $GRUPO/$MAEDIR
+  cp -ar ProPro/MAEDIR/tab $GRUPO/$MAEDIR
+}
+
 #function binariesInstalled(){
 #diff -q $PWD $PWD/grupo02/bin
 #diff -q $PWD $PWD/grupo02/bin | grep \.sh

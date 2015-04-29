@@ -96,5 +96,7 @@ createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
 
 writeConf
+installBinaries
+installTabs
 
 # TODO: Limpiar variables
