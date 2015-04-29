@@ -389,6 +389,14 @@ function installTabs(){
   cp -ar ProPro/MAEDIR/tab $MAEDIR
 }
 
+
+function unsetVariables(){
+  for (( i = 0; i < ${#variables[@]}; i++ ));
+  do
+    eval "unset ${variables[$i]}"
+  done
+}
+
 #function binariesInstalled(){
 #diff -q $PWD $PWD/grupo02/bin
 #diff -q $PWD $PWD/grupo02/bin | grep \.sh

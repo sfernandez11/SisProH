@@ -98,5 +98,6 @@ createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
 writeConf
 installBinaries
 installTabs
+unsetVariables
 
 # TODO: Limpiar variables
