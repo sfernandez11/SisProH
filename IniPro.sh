@@ -10,14 +10,14 @@ source IniFunctions.sh
 
 if ! checkAmbiente; then 
 	echo "Ambiente ya inicializado"
-	exit 1
+	return 1
 fi
 
 GRUPO="$(cd ../; pwd)"
 
 if confFileNotFound; then
 	echo "No existe el archivo de configuracion"
-	exit 1
+	return 1
 fi
 
 CONFDIR=$GRUPO/conf
