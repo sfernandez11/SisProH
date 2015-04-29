@@ -11,16 +11,6 @@ RECDIR=ACEPDIR
 MAEDIR=MAEDIR
 RECHDIR=RECHDIR
 PROCDIR=PROCDIR
-#AUX= ls $RECDIR | grep "Alfonsin" | sort -t _ -k 4 
-#echo $AUX
-#for f in $RECDIR
-#do
-#	echo "procesing $f file"
-#done
-#if [ -a PROCDIR/teto.test ]
-#then
-#	echo 'existe'
-#fi
 gestiones=$(cat $MAEDIR/gestiones.mae | sed  's/\([^;]*\);\(.*\)/\1/') 
 for gest in $gestiones
 do
@@ -39,17 +29,19 @@ do
 			then
 				if [ -a PROCDIR/$gest ]
 				then
-					#mv $RECDIR/$doc $PROCDIR/$gest/$doc
+					mv $RECDIR/$doc $PROCDIR/$gest/$doc
 					echo '1'
 				else
 					echo '2'
-					#mkdir $PROCDIR/$gest
-					#mv $RECDIR/$doc $PROCDIR/$gest/$doc
+					mkdir $PROCDIR/$gest
+					mv $RECDIR/$doc $PROCDIR/$gest/$doc
 				fi
 			else
 				sh ../glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
 				mv $RECDIR/$doc $RECHDIR
 			fi
+			sed '/^$' $RECDIR/$gest/$doc > $RECDIR/$gest/tmp/$doc
+			writeRecordOutput $RECDIR/$gest/tmp/$doc 'HIST'
 		fi
 	done
 done
