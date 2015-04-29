@@ -3,6 +3,11 @@
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 
+declare -a variables
+declare -a messages
+declare -a installed
+declare -a values
+
 function divide(){
   echo $((($1 + $2/2) / $2))
 }
@@ -27,23 +32,19 @@ function logError(){
 function setVariable(){
   local vaux
   local index=$(getIndex variables "$1")  
-  #local myresult="${!1}"
-  read -p "Defina $2 ($3${values[$index]}):" vaux
+  read -p "Defina $2 (${values[$index]}):" vaux
 
   while [ -n "$vaux" ]
   do
-    #logInfo "$1 cambiado a $vaux"
     if isValid $1 $vaux;
     then
       values[$index]=`echo "$vaux" | sed 's:^/\{0,1\}\(.*\)$:\1:'`
       vaux=""
     else
       echo valor invalido, reingrese.
-      read -p "Defina $2 ($3${!1}):" vaux
+      read -p "Defina $2 (${values[$index]}):" vaux
     fi
   done
-
-  #eval $1="'$myresult'"
   eval $1="${values[$index]}"
 }
 
@@ -52,9 +53,9 @@ function setDir(){
   # asumo que esta instalado ese componente
   # y no pido que el usuario lo redefina
   local index=$(getIndex variables "$1")
-  if [ ! -d "$GRUPO/${values[$index]}" ];
+  if [ ! -d "${values[$index]}" ];
   then
-    setVariable $1 "el directorio para $2" "$GRUPO/"
+    setVariable $1 "el directorio para $2"
   fi
 }
 
@@ -81,10 +82,9 @@ function createDirs(){
   fi
   for var in "$@"
   do
-    local curr="$GRUPO/$var"
-    if [ -d "$curr" ]
+    if [ -d "$var" ]
     then
-      logInfo "directorio $curr ya existe"
+      logInfo "directorio $var ya existe"
       continue
     fi
     if createDirWithSubdir "$var";
@@ -192,14 +192,13 @@ function createDirWithSubdir(){
   # creo una lista de directorios que contienen subdirectorios
   # TODO: variables locales
   local BASE=$GRUPO
-  local FOLDERS=$1
+  local FOLDERS=`echo $1 | sed "s>^$GRUPO>>"`
 
   local NEWBASE=$BASE
   for c in `echo $FOLDERS | tr "/" " "`; do
     NEWBASE="$NEWBASE/$c"
     if [ -d "$NEWBASE" ]
     then
-      #logInfo "directorio $var ya existe"
       continue
     fi
     if ! $(createDir "$NEWBASE")
@@ -217,20 +216,20 @@ function showStatus(){
   echo
   logInfo "--- TP SO7508 Primer Cuatrimestre 2015. Tema H Copyright © Grupo 02 ---"
   echo
-  logInfo "Directorio de Configuracion: $GRUPO/$CONFDIR"
+  logInfo "Directorio de Configuracion: $CONFDIR"
   showDirContent $CONFDIR
-  logInfo "Directorio de Ejecutables: $GRUPO/$BINDIR"
+  logInfo "Directorio de Ejecutables: $BINDIR"
   showDirContent $BINDIR
-  logInfo "Directorio de Maestros y Tablas: $GRUPO/$MAEDIR"
+  logInfo "Directorio de Maestros y Tablas: $MAEDIR"
   showDirContent $MAEDIR
-  logInfo "Directorio de recepción de documentos p/ protocolización: $GRUPO/$NOVEDIR"
+  logInfo "Directorio de recepción de documentos p/ protocolización: $NOVEDIR"
   logInfo "Espacio mínimo libre para arribos: $DATASIZE Mb"
-  logInfo "Directorio de Archivos Aceptados: $GRUPO/$ACEPDIR"
-  logInfo "Directorio de Archivos Rechazados: $GRUPO/$RECHDIR"
-  logInfo "Directorio de Archivos Protocolizados: $GRUPO/$PROCDIR"
-  logInfo "Directorio para informes y estadísticas: $GRUPO/$INFODIR"
-  logInfo "Nombre para el repositorio de duplicados: $GRUPO/$DUPDIR"
-  logInfo "Directorio para Archivos de Log: $GRUPO/$LOGDIR"
+  logInfo "Directorio de Archivos Aceptados: $$ACEPDIR"
+  logInfo "Directorio de Archivos Rechazados: $RECHDIR"
+  logInfo "Directorio de Archivos Protocolizados: $PROCDIR"
+  logInfo "Directorio para informes y estadísticas: $INFODIR"
+  logInfo "Nombre para el repositorio de duplicados: $DUPDIR"
+  logInfo "Directorio para Archivos de Log: $LOGDIR"
   showDirContent $LOGDIR
   logInfo "Tamaño máximo para archivos de log: $LOGSIZE Kb"
   logInfo "Estado de la instalación: LISTA"
@@ -240,10 +239,10 @@ function showStatus(){
 function showDirContent(){
   if [ -d "$GRUPO/$1" ]
   then
-    if [ "$(ls -A $GRUPO/$1)" ]
+    if [ "$(ls -A $1)" ]
     then
       logInfo "Contenido:"
-      for file in $GRUPO/$1/* ;
+      for file in $1/* ;
       do
          if [ -f "$file" ]
          then
@@ -282,7 +281,7 @@ function getIndex(){
 
 function initialize(){
   local index  
-  variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE)
+  variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE SECUENCIA)
   varLength=${#variables[@]}
 
   # seteo flags para saber que esta instalado ya
@@ -293,31 +292,31 @@ function initialize(){
 
   # valores por defecto de las variables de ambiente
   index=$(getIndex variables MAEDIR)
-  values[$index]=mae
+  values[$index]=$GRUPO/mae
   messages[$index]="maestros y tablas"
   index=$(getIndex variables NOVEDIR)
-  values[$index]=novedades
+  values[$index]=$GRUPO/novedades
   messages[$index]="recepción de documentos para protocolización"
   index=$(getIndex variables ACEPDIR)
-  values[$index]=a_protocolarizar
+  values[$index]=$GRUPO/a_protocolarizar
   messages[$index]="grabación de las Novedades aceptadas"
   index=$(getIndex variables RECHDIR)
-  values[$index]=rechazados
+  values[$index]=$GRUPO/rechazados
   messages[$index]="grabación de Archivos rechazados"
   index=$(getIndex variables PROCDIR)
-  values[$index]=protocolizados
+  values[$index]=$GRUPO/protocolizados
   messages[$index]="grabación de los documentos protocolizados"
   index=$(getIndex variables INFODIR)
-  values[$index]=informes
+  values[$index]=$GRUPO/informes
   messages[$index]="grabación de los informes de salida"
   index=$(getIndex variables DUPDIR)
-  values[$index]=dup
+  values[$index]=$GRUPO/dup
   messages[$index]="repositorio de archivos duplicados"
   index=$(getIndex variables LOGDIR)
-  values[$index]=log
+  values[$index]=$GRUPO/log
   messages[$index]="logs"
   index=$(getIndex variables BINDIR)
-  values[$index]=bin
+  values[$index]=$GRUPO/bin
   messages[$index]="instalación de los ejecutables"
   index=$(getIndex variables DATASIZE)
   values[$index]=100
@@ -325,6 +324,8 @@ function initialize(){
   index=$(getIndex variables LOGSIZE)
   values[$index]=400
   messages[$index]="tamaño máximo para cada archivo de log en Kbytes"
+  index=$(getIndex variables SECUENCIA)
+  values[$index]=1
 
 }
 
@@ -347,30 +348,20 @@ function askVariables(){
 }
 
 function writeConf(){
-  local file="$GRUPO/$CONFDIR/InsPro.conf"
+  local file="$CONFDIR/InsPro.conf"
   local sep='='
   local now=$(date +"%m-%d-%Y %H:%M:%S")
   local currentUser=$USER
   echo $sep > $file
   for (( i = 0; i < ${varLength}; i++ ));
   do
-    case ${variables[$i]} in
-        *DIR)
-          echo "${variables[$i]}$sep$GRUPO/${values[$i]}$sep$currentUser$sep$now" >> $file
-          ;;
-        *SIZE)
-          echo "${variables[$i]}$sep${values[$i]}$sep$currentUser$sep$now" >> $file
-          ;;
-    esac
+    echo "${variables[$i]}$sep${values[$i]}$sep$currentUser$sep$now" >> $file
   done
 }
 
 function readConf(){
-  local file="$GRUPO/$CONFDIR/InsPro.conf"
+  local file="$CONFDIR/InsPro.conf"
   local sep=$(head -n 1 "$file")
-  declare -a variables
-  declare -a installed
-  declare -a values
   
   local i=0
   while read line
@@ -387,15 +378,15 @@ function readConf(){
 }
 
 function installBinaries(){
-  cp -a *.sh $GRUPO/$BINDIR
-  cp -a RecPro/*.sh $GRUPO/$BINDIR
-  cp -a ProPro/*.sh $GRUPO/$BINDIR
+  cp -a *.sh $BINDIR
+  cp -a RecPro/*.sh $BINDIR
+  cp -a ProPro/*.sh $BINDIR
 }
 
 function installTabs(){
-  cp -a ProPro/ACEPDIR/* $GRUPO/$NOVEDIR
-  cp -a ProPro/MAEDIR/* $GRUPO/$MAEDIR
-  cp -ar ProPro/MAEDIR/tab $GRUPO/$MAEDIR
+  cp -a ProPro/ACEPDIR/* $NOVEDIR
+  cp -a ProPro/MAEDIR/* $MAEDIR
+  cp -ar ProPro/MAEDIR/tab $MAEDIR
 }
 
 #function binariesInstalled(){

@@ -15,22 +15,22 @@
 # importo mi archivo con funciones
 source InsFunctions.sh
 
-declare -a variables
-declare -a messages
-declare -a installed
-declare -a values
-
-
-initialize
+#declare -a variables
+#declare -a messages
+#declare -a installed
+#declare -a values
 
 GRUPO=$PWD/grupo02
-CONFDIR=conf
+CONFDIR=$GRUPO/conf
+initialize
+
+
 
 # TODO: CONFDIR ya deberia existir
 createDirs $CONFDIR
 
 # TODO: verificar si ya esta instalado y cosas que faltan instalar
-if [ -f $GRUPO/$CONFDIR/InsPro.conf ]
+if [ -f $CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
   readConf
