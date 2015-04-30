@@ -33,6 +33,7 @@ do
 			else
 				$BINDIR/glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
 				$BINDIR/mover.sh $ACEPDIR/$doc $RECHDIR "ProPro"
+				continue
 			fi
 			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
 			sed '/^$' $ACEPDIR/$gest/$doc > $ACEPDIR/$gest/$doc.temporal
