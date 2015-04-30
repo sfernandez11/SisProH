@@ -381,6 +381,7 @@ function installBinaries(){
   cp -a *.sh $BINDIR
   cp -a RecPro/*.sh $BINDIR
   cp -a ProPro/*.sh $BINDIR
+  chmod +x $BINDIR/*
 }
 
 function installTabs(){
