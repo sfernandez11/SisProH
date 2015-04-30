@@ -38,10 +38,21 @@ function checkTableFiles(){
 	return 0
 }
 
-function checkPerm(){
-	chmod +x $BINDIR"/Start.sh"
-	chmod +x $BINDIR"/RecPro.sh"
-	chmod +x $BINDIR"/Stop.sh"
+function permissionsMissing(){
+    #chmod +x $BINDIR"/Start.sh"
+    #chmod +x $BINDIR"/RecPro.sh"
+    #chmod +x $BINDIR"/Stop.sh"
+    DIE=1
+    local file
+    for file in $BINDIR/* ;
+    do
+       if [ ! -x "$file" ]
+       then
+         echo "No tiene permisos para ejecutar ${file##*/}"
+         DIE=0
+       fi
+    done
+    return $DIE  
 }
 
 

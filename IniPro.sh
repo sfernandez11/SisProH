@@ -120,8 +120,11 @@ if [ ! checkTableFiles ]; then
 	return 1
 fi
 
-echo "Asignando permisos de ejecucion..."
-checkPerm
+echo "Verificando permisos de ejecucion..."
+if permissionsMissing;
+then
+	return 1
+fi
 
 echo "Estado del Sistema: INICIALIZADO"
 
