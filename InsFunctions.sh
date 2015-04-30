@@ -38,7 +38,14 @@ function setVariable(){
   do
     if isValid $1 $vaux;
     then
-      values[$index]=`echo "$vaux" | sed 's:^/\{0,1\}\(.*\)$:\1:'`
+      if isInteger $vaux;
+      then
+        values[$index]=$vaux
+      else
+        vaux=`echo $vaux | sed "s>^$GRUPO>>"`
+        vaux=`echo "$vaux" | sed 's:^/\{0,1\}\(.*\)$:\1:'`
+        values[$index]="$GRUPO/$vaux"
+      fi
       vaux=""
     else
       echo valor invalido, reingrese.
@@ -237,7 +244,7 @@ function showStatus(){
 }
 
 function showDirContent(){
-  if [ -d "$GRUPO/$1" ]
+  if [ -d "$1" ]
   then
     if [ "$(ls -A $1)" ]
     then
@@ -282,7 +289,7 @@ function getIndex(){
 function initialize(){
   local index  
   variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE SECUENCIA)
-  varLength=${#variables[@]}
+  local varLength=${#variables[@]}
 
   # seteo flags para saber que esta instalado ya
   for (( i = 0; i < ${varLength}; i++ ));
@@ -330,6 +337,8 @@ function initialize(){
 }
 
 function askVariables(){
+  local varLength=${#variables[@]}
+
   for (( i = 0; i < ${varLength}; i++ ));
   do
     if [ "${installed[$i]}" = false ];
@@ -352,6 +361,7 @@ function writeConf(){
   local sep='='
   local now=$(date +"%m-%d-%Y %H:%M:%S")
   local currentUser=$USER
+  local varLength=${#variables[@]}
   echo $sep > $file
   for (( i = 0; i < ${varLength}; i++ ));
   do
@@ -370,7 +380,7 @@ function readConf(){
     values[$i]=$(echo $line | cut -f2 -d"$sep")
     installed[$i]=false
     
-    echo "${variables[$i]}$sep${values[$i]}"
+    #echo "${variables[$i]}$sep${values[$i]}"
     (( i++ ))
   done < <(grep -v ^.$ $file)
   
@@ -390,11 +400,19 @@ function installTabs(){
   cp -ar ProPro/MAEDIR/tab $MAEDIR
 }
 
-
 function unsetVariables(){
   for (( i = 0; i < ${#variables[@]}; i++ ));
   do
     eval "unset ${variables[$i]}"
+  done
+}
+
+function initializeEnviroment(){
+  readConf
+  for (( i = 0; i < ${#variables[@]}; i++ ));
+  do
+    eval ${variables[$i]}=${values[$i]}
+    export ${variables[$i]}
   done
 }
 

@@ -15,16 +15,11 @@
 # importo mi archivo con funciones
 source InsFunctions.sh
 
-#declare -a variables
-#declare -a messages
-#declare -a installed
-#declare -a values
 
 GRUPO=$PWD/grupo02
 CONFDIR=$GRUPO/conf
+
 initialize
-
-
 
 # TODO: CONFDIR ya deberia existir
 createDirs $CONFDIR
@@ -100,5 +95,3 @@ installBinaries
 installTabs
 unsetVariables
 
-
-# TODO: Limpiar variables
