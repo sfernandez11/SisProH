@@ -45,6 +45,7 @@ sub runQueryMode {
 			}
 		}
 	}
+	applyFilters(@fileList);
 }
 
 sub showQueryMenu {
@@ -71,10 +72,67 @@ sub isEmptyFilter {
 	my $self = shift;
 	my @filters = keys $self->{filters};
 	for my $filter (@filters) {
-	    if ($self->{filters}{$filter} != '') return false;
+	    if ($self->{filters}{$filter} ne '') return false;
 	}
 	print "\033[2J";    #clear the screen
 	print "\033[0;0H"; #jump to 0,0
 	print "Necesita elegir al menos un filtro.";
 	return true;
+}
+
+sub parseDoc {
+	my $self = shift;
+	my $file = shift;
+
+}
+
+sub applyFilters {
+	my $self = shift;
+	my @fileList = shift;
+	my @filters = keys $self->{filters};
+	for my $filter (@filters) {
+	    switch ($filter) {
+	    	case 'tNorma' {@fileList = applyTNormaFilter(self->{filters}{filter}, @filters)}
+	    	case 'año' {@fileList = applyAnioFilter(self->{filters}{filter}, @filters)}
+	    	case 'nNorma' {@fileList = applyNNormaFilter(self->{filters}{filter}, @filters)}
+	    	case 'gestion' {@fileList = applyGestionFilter(self->{filters}{filter}, @filters)}
+	    	case 'emisor' {@fileList = applyEmisorFilter(self->{filters}{filter}, @filters)}
+	    }
+	}
+	return @filters;
+}
+
+sub applyTNormaFilter {
+	my $self = shift;
+	my $filter = shift;
+	my @fileList = shift;
+	if ($filter eq '') return @fileList;
+}
+
+sub applyAnioFilter {
+	my $self = shift;
+	my $filter = shift;
+	my @fileList = shift;
+	if ($filter eq '') return @fileList;
+}
+
+sub applyNNormaFilter {
+	my $self = shift;
+	my $filter = shift;
+	my @fileList = shift;
+	if ($filter eq '') return @fileList;
+}
+
+sub appliyGestionFilter {
+	my $self = shift;
+	my $filter = shift;
+	my @fileList = shift;
+	if ($filter eq '') return @fileList;
+}
+
+sub applyEmisorFilter {
+	my $self = shift;
+	my $filter = shift;
+	my @fileList = shift;
+	if ($filter eq '') return @fileList;
 }
