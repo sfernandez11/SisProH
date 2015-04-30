@@ -2,21 +2,19 @@
 source ProProAuxFunctions.sh
 source ProProFunctions.sh
 
-export LOGDIR=${PWD}/LOGDIR
-export LOGSIZE=600
-sh ../glog.sh "ProPro" "Inicio de ProPro"
+$BINDIR/glog.sh "ProPro" "Inicio de ProPro"
 cantFile=`ls 'ACEPDIR/' | wc -l`
-sh ../glog.sh "ProPro" "Cantidad de archivos a procesar: $cantFile"
+$BINDIR/glog.sh "ProPro" "Cantidad de archivos a procesar: $cantFile"
 gestiones=$(cat $MAEDIR/gestiones.mae | sed  's/\([^;]*\);\(.*\)/\1/') 
 for gest in $gestiones
 do
 	docs=$(ls $ACEPDIR | grep $gest | sort -t _ -k 4)
 	for doc in $docs
 	do
-		sh ../glog.sh "ProPro" "Archivo a procesar: $doc"
+		$BINDIR/glog.sh "ProPro" "Archivo a procesar: $doc"
 		if [ -a $PROCDIR/$gest/$doc ]
 		then
-			sh ../glog.sh "ProPro" "Se rechaza el archivo por estar duplicado."
+			$BINDIR/glog.sh "ProPro" "Se rechaza el archivo por estar duplicado."
 			$BINDIR/mover.sh  $ACEPDIR/$doc $RECHDIR "ProPro" 
 		else
 			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`
@@ -33,13 +31,16 @@ do
 					$BINDIR/mover.sh $ACEPDIR/$doc $PROCDIR/$gest/$doc "ProPro"
 				fi
 			else
-				sh ../glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
+				$BINDIR/glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
 				$BINDIR/mover.sh $ACEPDIR/$doc $RECHDIR "ProPro"
+				continue
 			fi
-			sed '/^$' $ACEPDIR/$gest/$doc > $ACEPDIR/$gest/tmp/$doc
+			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
+			sed '/^$' $ACEPDIR/$gest/$doc > $ACEPDIR/$gest/$doc.temporal
 			DOCTYPE= getDocType $doc
-			writeRecordOutput $ACEPDIR/$gest/tmp/$doc $DOCTYPE
-			rm  $ACEPDIR/$gest/tmp/$doc
+			writeRecordOutput $ACEPDIR/$gest/$doc.temporal $DOCTYPE
+			$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
+			rm  $ACEPDIR/$gest/$doc.temporal
 		fi
 	done
 done

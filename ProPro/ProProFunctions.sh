@@ -199,7 +199,6 @@ function chequearFechaValidaRangoGestion(){
 
 	if [ "$fechaNorma" -ge "$fechaDesde" -a "$fechaNorma" -le "$fechaHasta"  ]
 	then
-		fechaNormaEnRangoGestion=0
 		return 0
 	else
 		return 1
