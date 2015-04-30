@@ -2,8 +2,6 @@
 source ProProAuxFunctions.sh
 source ProProFunctions.sh
 
-export LOGDIR=${PWD}/LOGDIR
-export LOGSIZE=600
 $BINDIR/glog.sh "ProPro" "Inicio de ProPro"
 cantFile=`ls 'ACEPDIR/' | wc -l`
 $BINDIR/glog.sh "ProPro" "Cantidad de archivos a procesar: $cantFile"
