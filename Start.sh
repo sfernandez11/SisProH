@@ -3,7 +3,7 @@
 # Script a cargo de comenzar la ejecución del demonio
 #-----------------------------------------------------------------------------------------------------------
 # Ejecutar de esta forma:
-# >$ Start.sh
+# >$ Start.sh RecPro
 #------------------------------------------------------------------------------------------------------------
 
 source IniFunctions.sh
@@ -14,18 +14,16 @@ if ambienteVacio; then
 	exit 1
 fi
 
-
-PID=`pidof RecPro.sh`
-
+PID=`ps aux | grep $BINDIR/$1.sh | grep -v grep | awk '{print $2}'`
 
 if [ "$PID" != "" ]; then
     echo "El demonio ya se encuentra inicializado, no se realizó ninguna acción"
     exit 1
 fi
 
-#nohup RecPro.sh > /dev/null 2>&1 &
+nohup $1.sh > /dev/null 2>&1 &
 
-PID=`pidof $BINDIR/RecPro.sh`
+PID=`ps aux | grep $BINDIR/$1.sh | grep -v grep | awk '{print $2}'`
 
 if [ "$PID" != "" ]; then
     echo "Se inició el demonio correctamente con PID: $PID" 

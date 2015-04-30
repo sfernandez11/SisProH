@@ -51,7 +51,7 @@ echo "Hola" #TODO listar archivos en dir
 
 
 function startDeamon(){
-	Start.sh
+	Start.sh RecPro
 }
 
 function noStartDeamon(){
