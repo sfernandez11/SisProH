@@ -94,6 +94,7 @@ export RECHDIR
 export PROCDIR
 export INFODIR
 export DUPDIR
+export BINDIR
 export LOGDIR
 export LOGSIZE
 

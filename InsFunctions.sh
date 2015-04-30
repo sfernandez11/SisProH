@@ -224,7 +224,7 @@ function showStatus(){
   showDirContent $MAEDIR
   logInfo "Directorio de recepción de documentos p/ protocolización: $NOVEDIR"
   logInfo "Espacio mínimo libre para arribos: $DATASIZE Mb"
-  logInfo "Directorio de Archivos Aceptados: $$ACEPDIR"
+  logInfo "Directorio de Archivos Aceptados: $ACEPDIR"
   logInfo "Directorio de Archivos Rechazados: $RECHDIR"
   logInfo "Directorio de Archivos Protocolizados: $PROCDIR"
   logInfo "Directorio para informes y estadísticas: $INFODIR"

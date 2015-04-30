@@ -66,7 +66,7 @@ function startDeamon(){
 }
 
 function noStartDeamon(){
-	echo "Ok, no empezamos. Podes arrancarlo manualmente con $ Start.sh"
+	echo "Ok, no empezamos. Podes arrancarlo manualmente con $ Start.sh RecPro"
 }
 
 function askStartDeamon(){
@@ -197,4 +197,9 @@ function ambienteVacio(){
 		return 0
 	fi
 	return 1
+}
+
+function getPid(){
+    local ppid=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}' | head -n 1`
+    echo $ppid
 }
