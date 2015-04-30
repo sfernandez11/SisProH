@@ -1,12 +1,3 @@
-function getDate() {
-	echo 'hola';
-	return;
-	my $item = shift;
-	$item =~ m/case "(\d+)"/;
-	return $1;
-}
-
-
 function getDocType() {
 	#doc="Alfonsin_RES_1001_383_23-05-1988"
 	doc=$1
