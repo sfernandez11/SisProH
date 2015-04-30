@@ -5,37 +5,40 @@
 #                                                                      #
 ########################################################################
 
-
+MAEDIR=../MAEDIR
+NOVEDIR=../NOVEDIR/*
+ACEPDIR=../ACEPDIR
+RECHDIR=../RECHDIR
+LOGDIR=../LOGDIR
 
 #INFORMA AL LOG SOBRE LA EJECUCION
 function logInfo(){
-    echo RecPro $1
+    ./glog.sh RecPro $1 
 }
 
 #INFORMA AL LOG DE ERRORES OCURRIDOS EN LA EJECUCION
 function logError(){
-    logInfo $1 "ERROR"
+    logInfo $1
 }
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
 function procesarNovedades(){		
 	
-for file in $1
+for file in $NOVEDIR
  do
 	if VerificarTipo "$file";
 	then 
 		if VerificarFormato "$file";
 		then 
-			if verificarCOD_GESTION "$file" "$2/gestion.mae";
+			if verificarCOD_GESTION "$file" "$MAEDIR/gestion.mae";
 			then
-				if verificarCOD_NORMA "$file" "$2/normas.mae";
+				if verificarCOD_NORMA "$file" "$MAEDIR/normas.mae";
 				then
-					if verificarCOD_EMISOR "$file" "$2/emisores.mae";
+					if verificarCOD_EMISOR "$file" "$MAEDIR/emisores.mae";
 					then
-						if verificar_FECHA_GESTION "$file" "$2/gestiones.mae";
+						if verificar_FECHA_GESTION "$file" "$MAEDIR/gestiones.mae";
 						then
-							echo "CAMINO FELIZ"
-							aceptarArchivo $file $3
+							aceptarArchivo $file
 						fi	
 					fi	
 				fi	
@@ -43,6 +46,7 @@ for file in $1
 		fi
 	fi		
 done 
+return 0
 }
 
 
@@ -54,7 +58,7 @@ local tipe=`file $1`
 if !(echo $tipe | grep '.*text$' &>/dev/null) 
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado  ${1##*/}  - Tipo invalido" "INFO"
+		logInfo "Rechazado  ${1##*/}  - Tipo invalido"
 		return 1
 	else
 		return 0
@@ -67,8 +71,8 @@ function VerificarFormato(){
 	
 if !(echo ${1##*/} | grep '^.*_.*_.*_[1-9]\{1,\}_[^_]*$' &>/dev/null) 
 	then 
-		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto" "INFO"
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto"
 		return 1
 	else
 		return 0
@@ -83,8 +87,8 @@ local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/
 
 if !(grep "^$codgestion;.*;.*;.*;" "$2" &>/dev/null)
 	then 
-		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado ${1##*/} - Gestion inexistente" "INFO"
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Gestion inexistente"
 		return 1
 	else
 		return 0
@@ -100,8 +104,8 @@ local codnorma=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\2/g'
 
 if !(grep "^$codnorma;.*;" "$2" &>/dev/null)
 	then 
-		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado ${1##*/} - Norma inexistente" "INFO"
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Norma inexistente"
 		return 1
 	else
 		return 0 
@@ -117,8 +121,8 @@ local codemisor=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\3/g
 
 if !(grep "^$codemisor;.*;.*;" "$2" &>/dev/null)
 	then 
-		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado ${1##*/} - Emisor inexistente" "INFO"
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Emisor inexistente"
 		return 1
 	else
 		return 0
@@ -142,8 +146,8 @@ fi
 
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
-		#../mover.sh $1 "$RECHDIR"
-		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion" "INFO"
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion"
 		return 1
 	else
 		return 0
@@ -200,13 +204,58 @@ fi
 
 function aceptarArchivo(){
 	
-	../mover.sh $1 $2
+	local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`
 	
+	if [ ! -d $ACEPDIR/$codgestion ]
+	then
+		mkdir $ACEPDIR/$codgestion
+	fi
+	logInfo  " File Rechazado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
+	./mover.sh $1 $ACEPDIR/$codgestion RecPro.sh
+	return 0	
 }
 
 function rechazarArchivo(){
 	
-	../mover.sh $1 $2
+	logInfo "File Aceptado ${1##*/} - Destino $RECHDIR/${1##*/}"
+	./mover.sh  $1 $RECHDIR RecPro.sh
+	return 0
 }
 
+# Si existen archivos en los subdirectorios de ACEPDIR se intenta 
+# invocar el comando ProPro
+# Si se pudo invocar se graba en LOG: ProPro - Corriendo  <Id>
+# Si hay archivos pero esta corriendo se graba en LOG: Posponer a siguiente Ciclo
+# Si surge algun error se muestra por pantalla
 
+function novedadesPedientes(){
+	
+if hayNovedadesPendientes;
+	then
+	PID=`pidof ProPro.sh`
+	if [ "$PID" = "" ]; 
+	then
+		nohup ./ProPro.sh > /dev/null 2>&1 
+		PID=`pidof ProPro.sh`
+		logInfo "ProPro corriendo bajo el no.: $PID"
+		return 0
+	else
+		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo"
+		return 0
+	fi
+fi
+return 0	
+}
+
+function hayNovedadesPendientes(){
+	
+for directorio in $ACEPDIR/*/
+ do		
+    local dir=`find $directorio -type f | wc -l`
+	if [ ! $dir -eq 0 ]
+	then
+		return 0
+	fi
+done
+return 1
+}
