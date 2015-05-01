@@ -317,27 +317,6 @@ function initialize(){
   configureVar LOGSIZE "400" "tamaño máximo para cada archivo de log en Kbytes"
   configureVar SECUENCIA "1"
 
-  index=$(getIndex variables DATASIZE)
-  if [ "${installed[$index]}" = false -o "${installed[$index]}" = "" ];
-  then
-    values[$index]=100
-    installed[$index]=false
-  fi
-  messages[$index]="espacio mínimo libre para el arribo de las novedades en Mbytes"
-  index=$(getIndex variables LOGSIZE)
-  if [ "${installed[$index]}" = false -o "${installed[$index]}" = "" ];
-  then
-    values[$index]=400
-    installed[$index]=false
-  fi
-  messages[$index]="tamaño máximo para cada archivo de log en Kbytes"
-  index=$(getIndex variables SECUENCIA)
-  if [ "${installed[$index]}" = false -o "${installed[$index]}" = "" ];
-  then
-    values[$index]=1
-    installed[$index]=false
-  fi
-
 }
 
 function askVariables(){
