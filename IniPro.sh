@@ -10,7 +10,7 @@ source IniFunctions.sh
 source InsFunctions.sh
 
 if ! checkAmbiente; then 
-	echo "Ambiente ya inicializado"
+	logERROR "Ambiente err ya inicializado"
 	return 1
 fi
 
