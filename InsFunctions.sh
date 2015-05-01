@@ -421,6 +421,19 @@ function verifyDirsExisting(){
   done
 }
 
+
+function askInstall(){
+echo "Inicia la instalación? Si – No"
+
+	select yn in "Si" "No"; do
+	    case $yn in
+	        Si ) CONFIRM_INSTALL="SI"; break;;
+	        No ) CONFIRM_INSTALL="NO"; break;;
+		      * ) echo "Por favor, seleccione una opcion";;
+	    esac
+	done
+}
+
 #function binariesInstalled(){
 #diff -q $PWD $PWD/grupo02/bin
 #diff -q $PWD $PWD/grupo02/bin | grep \.sh
