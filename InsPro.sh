@@ -15,11 +15,8 @@
 # importo mi archivo con funciones
 source InsFunctions.sh
 
-
 GRUPO=$PWD/grupo02
 CONFDIR=$GRUPO/conf
-
-initialize
 
 # TODO: CONFDIR ya deberia existir
 createDirs $CONFDIR
@@ -29,13 +26,13 @@ if [ -f $CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
   readConf
+  verifyDirsExisting
   echo ${variables[@]}
   exit 0
 
 fi
 
-
-
+initialize
 
 # valido version de perl
 
@@ -53,7 +50,7 @@ fi
 
 
 CONFIRM_INSTALL=""
-until [ "$CONFIRM_INSTALL" = "SI" -o "$CONFIRM_INSTALL" = "S" ]
+until [ "$CONFIRM_INSTALL" = "SI" ]
 do
   if [ -n "$CONFIRM_INSTALL" ]
   then
@@ -63,6 +60,7 @@ do
   fi
   # pido al usuario que ingrese los valores de las variables
   askVariables
+  setEnviroment
 
   # se hacen todas las validaciones
 
@@ -79,10 +77,7 @@ do
 
   # se cumplieron todas las validaciones confirmo inicio
   showStatus
-  logInfo "Inicia la instalación? Si / No: "
-  read -n 2 -p '    Si / No (Si): ' CONFIRM_INSTALL
-
-  CONFIRM_INSTALL=`echo $CONFIRM_INSTALL | tr '[:lower:]' '[:upper:]' | sed s:^$:SI:`
+  askInstall
 
 done
 

@@ -286,53 +286,36 @@ function getIndex(){
   return 1
 }
 
+function configureVar(){
+  local index=$(getIndex variables $1)
+  local value=`[[ "$1" == *DIR ]] && echo $GRUPO/$2 || echo $2`
+  if [ "${installed[$index]}" = false -o "${installed[$index]}" = "" ];
+  then
+    values[$index]=$value
+    installed[$index]=false
+  fi
+  messages[$index]=$3
+}
+
 function initialize(){
   local index  
   variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE SECUENCIA)
-  local varLength=${#variables[@]}
-
-  # seteo flags para saber que esta instalado ya
-  for (( i = 0; i < ${varLength}; i++ ));
-  do
-     installed[$i]=false
-  done
 
   # valores por defecto de las variables de ambiente
-  index=$(getIndex variables MAEDIR)
-  values[$index]=$GRUPO/mae
-  messages[$index]="maestros y tablas"
-  index=$(getIndex variables NOVEDIR)
-  values[$index]=$GRUPO/novedades
-  messages[$index]="recepción de documentos para protocolización"
-  index=$(getIndex variables ACEPDIR)
-  values[$index]=$GRUPO/a_protocolarizar
-  messages[$index]="grabación de las Novedades aceptadas"
-  index=$(getIndex variables RECHDIR)
-  values[$index]=$GRUPO/rechazados
-  messages[$index]="grabación de Archivos rechazados"
-  index=$(getIndex variables PROCDIR)
-  values[$index]=$GRUPO/protocolizados
-  messages[$index]="grabación de los documentos protocolizados"
-  index=$(getIndex variables INFODIR)
-  values[$index]=$GRUPO/informes
-  messages[$index]="grabación de los informes de salida"
-  index=$(getIndex variables DUPDIR)
-  values[$index]=$GRUPO/dup
-  messages[$index]="repositorio de archivos duplicados"
-  index=$(getIndex variables LOGDIR)
-  values[$index]=$GRUPO/log
-  messages[$index]="logs"
-  index=$(getIndex variables BINDIR)
-  values[$index]=$GRUPO/bin
-  messages[$index]="instalación de los ejecutables"
-  index=$(getIndex variables DATASIZE)
-  values[$index]=100
-  messages[$index]="espacio mínimo libre para el arribo de las novedades en Mbytes"
-  index=$(getIndex variables LOGSIZE)
-  values[$index]=400
-  messages[$index]="tamaño máximo para cada archivo de log en Kbytes"
-  index=$(getIndex variables SECUENCIA)
-  values[$index]=1
+  configureVar MAEDIR "mae" "maestros y tablas"
+  configureVar NOVEDIR "novedades" "recepción de documentos para protocolización"
+  configureVar ACEPDIR "a_protocolarizar" "grabación de las Novedades aceptadas"
+  configureVar RECHDIR "rechazados" "grabación de Archivos rechazados"
+  configureVar PROCDIR "protocolizados" "grabación de los documentos protocolizados"
+  configureVar INFODIR "informes" "grabación de los informes de salida"
+  configureVar INFODIR "informes" "grabación de los informes de salida"
+  configureVar INFODIR "informes" "grabación de los informes de salida"
+  configureVar DUPDIR "dup" "repositorio de archivos duplicados"
+  configureVar LOGDIR "log" "logs"
+  configureVar BINDIR "bin" "instalación de los ejecutables"
+  configureVar DATASIZE "100" "espacio mínimo libre para el arribo de las novedades en Mbytes"
+  configureVar LOGSIZE "400" "tamaño máximo para cada archivo de log en Kbytes"
+  configureVar SECUENCIA "1"
 
 }
 
@@ -407,13 +390,48 @@ function unsetVariables(){
   done
 }
 
-function initializeEnviroment(){
-  readConf
+function setEnviroment(){
   for (( i = 0; i < ${#variables[@]}; i++ ));
   do
     eval ${variables[$i]}=${values[$i]}
     export ${variables[$i]}
   done
+
+}
+
+function initializeEnviroment(){
+  readConf
+  setEnviroment
+}
+
+function verifyDirsExisting(){
+  for (( i = 0; i < ${#variables[@]}; i++ ));
+  do
+    if [[ ${variables[$i]} == *DIR ]];
+    then
+      if [ ! -d "${values[$i]}" ];
+      then
+        installed[$i]=false
+      else
+        installed[$i]=true
+      fi
+    else
+      installed[$i]=true
+    fi
+  done
+}
+
+
+function askInstall(){
+echo "Inicia la instalación? Si – No"
+
+	select yn in "Si" "No"; do
+	    case $yn in
+	        Si ) CONFIRM_INSTALL="SI"; break;;
+	        No ) CONFIRM_INSTALL="NO"; break;;
+		      * ) echo "Por favor, seleccione una opcion";;
+	    esac
+	done
 }
 
 #function binariesInstalled(){
