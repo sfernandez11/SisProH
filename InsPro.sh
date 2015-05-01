@@ -19,8 +19,6 @@ source InsFunctions.sh
 GRUPO=$PWD/grupo02
 CONFDIR=$GRUPO/conf
 
-initialize
-
 # TODO: CONFDIR ya deberia existir
 createDirs $CONFDIR
 
@@ -29,13 +27,13 @@ if [ -f $CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
   readConf
+  verifyDirsExisting
   echo ${variables[@]}
   exit 0
 
 fi
 
-
-
+initialize
 
 # valido version de perl
 
@@ -63,6 +61,7 @@ do
   fi
   # pido al usuario que ingrese los valores de las variables
   askVariables
+  setEnviroment
 
   # se hacen todas las validaciones
 
