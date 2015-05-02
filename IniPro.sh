@@ -55,7 +55,7 @@ if [ ! checkTableFiles ]; then
 fi
 
 echo "Verificando permisos de ejecucion..."
-if permissionsMissing;
+if setPermissions;
 then
 	return 1
 fi

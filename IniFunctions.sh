@@ -60,20 +60,21 @@ function checkTableFiles(){
 	return 0
 }
 
-function permissionsMissing(){       
+function setPermissions(){       
     local file
     for file in $BINDIR/* ;
     do
-       if [ ! -x "$file" ]
-       then
+       if [ ! -x "$file" ]; then
          logINFO "No tiene permisos para ejecutar ${file##*/}"
          chmod +x $file
          if [ ! -x "$file" ]; then
          	logERROR "No se pudo setear permisos para ejecutar ${file##*/}"
          	return 1
-         elif 
+         else
          	logINFO "Se setearon permisos para ejecutar ${file##*/} correctamente"
          fi
+        else
+        	logINFO "Verificado permisos de ejecucion sobre ${file##*/}"
        fi
     done
     return 0
