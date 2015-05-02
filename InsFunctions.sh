@@ -91,7 +91,7 @@ function createDirs(){
   do
     if [ -d "$var" ]
     then
-      logInfo "directorio $var ya existe"
+      #logInfo "directorio $var ya existe"
       continue
     fi
     if createDirWithSubdir "$var";
@@ -168,7 +168,6 @@ function isValid(){
 	    ;;
 	  *DIR)
 	    if isDirSimple $2;
-	    #if $(isDirSimple $2)  || $(isDirPath $2)
 	    then
 	      if [[ $2 == conf ]] || [[ $2 == pruebas ]]
 	      then
@@ -197,7 +196,6 @@ function isValid(){
 
 function createDirWithSubdir(){
   # creo una lista de directorios que contienen subdirectorios
-  # TODO: variables locales
   local BASE=$GRUPO
   local FOLDERS=`echo $1 | sed "s>^$GRUPO>>"`
 
@@ -239,7 +237,6 @@ function showStatus(){
   logInfo "Directorio para Archivos de Log: $LOGDIR"
   showDirContent $LOGDIR
   logInfo "Tamaño máximo para archivos de log: $LOGSIZE Kb"
-  logInfo "Estado de la instalación: LISTA"
     
 }
 
@@ -248,14 +245,22 @@ function showDirContent(){
   then
     if [ "$(ls -A $1)" ]
     then
-      logInfo "Contenido:"
+      #logInfo "Contenido:"
+      local var="Contenido: "
       for file in $1/* ;
       do
-         if [ -f "$file" ]
-         then
-           logInfo "${file##*/}"
-         fi
+        if [ ${#var} -ge 70 ]
+        then
+          logInfo "$var"
+          var=""
+          #logInfo "${file##*/}"
+        fi
+        var=$var" ${file##*/}"
       done
+      if [ ${#var} -ge 1 ]
+      then
+        logInfo "$var"
+      fi
     else
     logInfo "Directorio vacio."
     fi
@@ -288,9 +293,9 @@ function getIndex(){
 
 function configureVar(){
   local index=$(getIndex variables $1)
-  local value=`[[ "$1" == *DIR ]] && echo $GRUPO/$2 || echo $2`
   if [ "${installed[$index]}" = false -o "${installed[$index]}" = "" ];
   then
+    local value=`[[ "$1" == *DIR ]] && echo $GRUPO/$2 || echo $2`
     values[$index]=$value
     installed[$index]=false
   fi
@@ -298,8 +303,10 @@ function configureVar(){
 }
 
 function initialize(){
-  local index  
-  variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE SECUENCIA)
+  if [ ${#variables[@]} -eq 0 ];
+  then
+    variables=(MAEDIR NOVEDIR ACEPDIR RECHDIR PROCDIR INFODIR DUPDIR LOGDIR BINDIR DATASIZE LOGSIZE SECUENCIA)
+  fi
 
   # valores por defecto de las variables de ambiente
   configureVar MAEDIR "mae" "maestros y tablas"
@@ -361,13 +368,16 @@ function readConf(){
   do
     variables[$i]=$(echo $line | cut -f1 -d"$sep")
     values[$i]=$(echo $line | cut -f2 -d"$sep")
-    installed[$i]=false
-    
-    #echo "${variables[$i]}$sep${values[$i]}"
+    if [[ ${variables[$i]} == *DIR ]];
+    then
+      # los directorios se chequean despues
+      installed[$i]=false
+    else
+      # los valores numericos
+      installed[$i]=true
+    fi
     (( i++ ))
   done < <(grep -v ^.$ $file)
-  
-  #echo ${variables[@]}
 }
 
 function installBinaries(){
@@ -433,6 +443,18 @@ echo "Inicia la instalación? Si – No"
 	    esac
 	done
 }
+
+function installComplete() {
+  for i in "${installed[@]}"
+  do
+    if [ $i = false ]
+    then
+      return 1
+    fi
+  done
+  return 0
+}
+
 
 #function binariesInstalled(){
 #diff -q $PWD $PWD/grupo02/bin

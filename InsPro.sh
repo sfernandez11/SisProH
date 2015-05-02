@@ -27,12 +27,17 @@ then
   echo "Ya esta instalado."
   readConf
   verifyDirsExisting
-  echo ${variables[@]}
-  exit 0
-
+  initialize
+  if installComplete;
+  then
+    setEnviroment
+    showStatus
+    logInfo "Estado de la instalación: COMPLETA"
+    exit 0
+  fi
+  echo "Verificando si esta completo ..."
 fi
 
-initialize
 
 # valido version de perl
 
@@ -48,8 +53,8 @@ then
   exit 1
 fi
 
+initialize
 
-CONFIRM_INSTALL=""
 until [ "$CONFIRM_INSTALL" = "SI" ]
 do
   if [ -n "$CONFIRM_INSTALL" ]
