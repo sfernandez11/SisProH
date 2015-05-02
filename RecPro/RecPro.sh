@@ -36,19 +36,20 @@ SLEEP_TIME=20
 nroCiclo=0
 INI=0
 
+
 #Valido si el ambiente fue inicializado correctamente
 if [ -n $INI ] # ambiente correcto, $VAL con valor 0
 	then
-		#while [[ true ]]; do
+		while [[ true ]]; do
 		    logInfo "Demonio despierto - Ciclo: $nroCiclo"
-			#procesarNovedades
+			procesarNovedades
 			novedadesPedientes
 			let nroCiclo++
 			logInfo "Demonio dormir"
 			sleep $SLEEP_TIME	
-		#done 
+		done 
 	else
 		logError "El ambiente no se inicializo correctamente"
 		logError "No es posible su ejecucion"
-		Exit 1
+		exit 1
 fi 
