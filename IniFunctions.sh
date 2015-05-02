@@ -1,5 +1,25 @@
 source InsFunctions.sh
 
+function log(){
+	if [ $BINDIR != "" ];then
+        	$BINDIR/glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
+        fi
+}
+
+function logINFO(){
+	echo "[INFO]" $1 
+	log "$1" "INFO" #1= log message, 2= log level
+}	
+function logERROR(){
+	echo "[ERROR]" $1
+	log "$1" "ERR"
+}
+
+function logWARNING(){
+	echo "[WARNING]" "$1" 
+	log "$1" "WAR"
+}
+
 function checkMaeFiles(){	
 	if [ ! -f $MAEDIR"/encuestas.mae" ]; then
 		return 1
@@ -65,7 +85,7 @@ function startDeamon(){
 }
 
 function noStartDeamon(){
-	echo "Ok, no empezamos. Podes arrancarlo manualmente con $ Start.sh RecPro"
+	logINFO "No se inicio el demonio. Puede arrancarlo manualmente con $ Start.sh RecPro"
 }
 
 function askStartDeamon(){
@@ -75,7 +95,7 @@ function askStartDeamon(){
 	    case $yn in
 	        Si ) startDeamon; break;;
 	        No ) noStartDeamon; break;;
-			* ) echo "Por favor, seleccione una opcion";;
+			* ) echo "Por favor, seleccione una opcion valida (1/2)";;
 	    esac
 	done
 }
