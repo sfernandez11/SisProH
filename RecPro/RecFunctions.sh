@@ -5,15 +5,9 @@
 #                                                                      #
 ########################################################################
 
-MAEDIR=../MAEDIR
-NOVEDIR=../NOVEDIR/*
-ACEPDIR=../ACEPDIR
-RECHDIR=../RECHDIR
-LOGDIR=../LOGDIR
-
 #INFORMA AL LOG SOBRE LA EJECUCION
 function logInfo(){
-    ./glog.sh RecPro $1 
+    ./glog.sh "RecPro" "$1"
 }
 
 #INFORMA AL LOG DE ERRORES OCURRIDOS EN LA EJECUCION
@@ -22,30 +16,33 @@ function logError(){
 }
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
-function procesarNovedades(){		
-	
-for file in $NOVEDIR
- do
-	if VerificarTipo "$file";
-	then 
-		if VerificarFormato "$file";
+function procesarNovedades(){	
+		
+if hayNovedadesPendientes $NOVEDIR/*;
+	then	
+	for file in $NOVEDIR/*
+	do
+		if VerificarTipo "$file";
 		then 
-			if verificarCOD_GESTION "$file" "$MAEDIR/gestion.mae";
-			then
-				if verificarCOD_NORMA "$file" "$MAEDIR/normas.mae";
+			if VerificarFormato "$file";
+			then 
+				if verificarCOD_GESTION "$file" "$MAEDIR/gestiones.mae";
 				then
-					if verificarCOD_EMISOR "$file" "$MAEDIR/emisores.mae";
+					if verificarCOD_NORMA "$file" "$MAEDIR/normas.mae";
 					then
-						if verificar_FECHA_GESTION "$file" "$MAEDIR/gestiones.mae";
+						if verificarCOD_EMISOR "$file" "$MAEDIR/emisores.mae";
 						then
-							aceptarArchivo $file
+							if verificar_FECHA_GESTION "$file" "$MAEDIR/gestiones.mae";
+							then
+								aceptarArchivo $file
+							fi	
 						fi	
 					fi	
-				fi	
+				fi
 			fi
-		fi
-	fi		
-done 
+		fi		
+	done 
+fi	
 return 0
 }
 
@@ -53,12 +50,13 @@ return 0
 #VERIFICA ARCHIVOS QUE SEAN SOLO DE TEXTO
 function VerificarTipo(){	
 	
-local tipe=`file $1`	
+local tipe=`file $1`
+local tipo=`echo $tipe | sed 's/^\(.*\):\(.*\)/\2/g'`	
 
-if !(echo $tipe | grep '.*text$' &>/dev/null) 
+if !(echo $tipo | grep '.*text$' &>/dev/null) 
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado  ${1##*/}  - Tipo invalido"
+		logInfo "Rechazado  ${1##*/}  - Tipo invalido : $tipo"
 		return 1
 	else
 		return 0
@@ -69,7 +67,8 @@ fi
 
 function VerificarFormato(){
 	
-if !(echo ${1##*/} | grep '^.*_.*_.*_[1-9]\{1,\}_[^_]*$' &>/dev/null) 
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[1-9]\{1,\}_[^_]*$' &>/dev/null)
+
 	then 
 		rechazarArchivo $1
 		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto"
@@ -88,7 +87,7 @@ local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/
 if !(grep "^$codgestion;.*;.*;.*;" "$2" &>/dev/null)
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Gestion inexistente"
+		logInfo "Rechazado ${1##*/} - [$codgestion] Gestion inexistente"
 		return 1
 	else
 		return 0
@@ -105,7 +104,7 @@ local codnorma=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\2/g'
 if !(grep "^$codnorma;.*;" "$2" &>/dev/null)
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Norma inexistente"
+		logInfo "Rechazado ${1##*/} - [$codnorma] Norma inexistente"
 		return 1
 	else
 		return 0 
@@ -122,7 +121,7 @@ local codemisor=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\3/g
 if !(grep "^$codemisor;.*;.*;" "$2" &>/dev/null)
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Emisor inexistente"
+		logInfo "Rechazado ${1##*/} - [$codemisor] Emisor inexistente"
 		return 1
 	else
 		return 0
@@ -133,10 +132,10 @@ fi
 
 function verificar_FECHA_GESTION(){
 
-local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\5/g'`
+local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\([0-3][0-9]\)[^_]\([0-1][0-9]\)[^_]\([1-2][0-9][0-9][0-9]\)/\7\6\5/g'`
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
-local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\2/g'`
-local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
+local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\);\(.*\)-\4\3\2-g'`
+local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`	
 
 if [ $fecha_hasta = "NULL" ]
 	then
@@ -156,44 +155,11 @@ fi
 	  
 function verificar_FECHA(){
 	
-local anio_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\3-g'`
-local mes_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\2-g'`
-local dia_file=`echo "$1" | sed 's-\([0-3][0-9]\)\([0-1][0-9]\)\([1-2][0-9][0-9][0-9]\)-\1-g'`
-
-local anio_desde=`echo "$2" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\3-g'`
-local mes_desde=`echo "$2" | sed 's-\([0-3][0-9]\)\/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\2-g'`
-local dia_desde=`echo "$2" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\1-g'`
-
-local anio_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)\/\([1-2][0-9][0-9][0-9]\)-\3-g'`
-local mes_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\2-g'`
-local dia_hasta=`echo "$3" | sed 's-\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\)-\1-g'`
-
-
-if [ $anio_desde = $anio_file ] || [ $anio_file = $anio_hasta ]
-	then
-		if [ $mes_desde = $mes_file ] && [ $mes_file = $mes_hasta ]
-			then
-				if [ $dia_desde \< $dia_file ] && [ $dia_file \< $dia_hasta ]
-					then
-						return 0
-					else
-						return 1
-				fi
-			else
-				if [ $mes_desde \< $mes_file ] && [ $mes_file \< $mes_hasta ]
-					then
-						return 0
-					else
-						return 1
-				fi
-		fi
-	else
-		if [ $anio_desde \< $anio_file ] && [ $anio_file \< $anio_hasta ]
-			then
-				return 0
-			else
-				return 1
-		fi
+if [ $2 \< $1 ]	&& [ $1 \< $3 ]
+ then
+	return 0
+ else
+	return 1		
 fi
 }		
 	
@@ -210,15 +176,15 @@ function aceptarArchivo(){
 	then
 		mkdir $ACEPDIR/$codgestion
 	fi
-	logInfo  " File Rechazado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
-	./mover.sh $1 $ACEPDIR/$codgestion RecPro.sh
+	logInfo  "Aceptado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
+	./mover.sh $1 $ACEPDIR/$codgestion RecPro
 	return 0	
 }
 
 function rechazarArchivo(){
 	
-	logInfo "File Aceptado ${1##*/} - Destino $RECHDIR/${1##*/}"
-	./mover.sh  $1 $RECHDIR RecPro.sh
+	logInfo "Movido ${1##*/} - Destino $RECHDIR/${1##*/}"
+	./mover.sh  $1 $RECHDIR RecPro
 	return 0
 }
 
@@ -230,12 +196,12 @@ function rechazarArchivo(){
 
 function novedadesPedientes(){
 	
-if hayNovedadesPendientes;
+if hayNovedadesPendientes $ACEPDIR/*/;
 	then
 	PID=`pidof ProPro.sh`
 	if [ "$PID" = "" ]; 
 	then
-		nohup ./ProPro.sh > /dev/null 2>&1 
+		nohup ./ProPro.sh > /dev/null 2>&1
 		PID=`pidof ProPro.sh`
 		logInfo "ProPro corriendo bajo el no.: $PID"
 		return 0
@@ -249,7 +215,7 @@ return 0
 
 function hayNovedadesPendientes(){
 	
-for directorio in $ACEPDIR/*/
+for directorio in $1
  do		
     local dir=`find $directorio -type f | wc -l`
 	if [ ! $dir -eq 0 ]
