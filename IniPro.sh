@@ -9,59 +9,89 @@
 source IniFunctions.sh
 source InsFunctions.sh
 
-if ! checkAmbiente; then 
-	logERROR "Ambiente err ya inicializado"
+if ! setLogger ; then
+	echo "No se encontro el glog. Reinstale el sistema e intente nuevamente"
 	return 1
 fi
 
-GRUPO="$(dirname "$PWD")"
-
-if confFileNotFound; then
-	echo "No existe el archivo de configuracion"
+if ! environmentIsEmpty ; then 
+	logINFO "Ambiente ya inicializado. Si quiere reiniciar termine su sesion e ingrese nuevamente"
 	return 1
 fi
 
+GRUPO=$(getRootDir)
 CONFDIR=$GRUPO/conf
 CONFFILE=$CONFDIR/InsPro.conf
 
-echo "Exportando variables de ambiente..."
-
-echo "Directorio raiz del sistema: "$GRUPO
-echo "Directorio de configuracion: "$CONFDIR
-
-initializeEnviroment
-
-export PATH=$PATH:$BINDIR
-echo "Se agrego $BINDIR al PATH. PATH= "$PATH
-
-echo "Fin de exportar variables de ambiente"
-
-echo "Verificando la existencia de ejecutables..."
-if [ ! checkBinFiles ]; then
-	echo "No existen los comandos ejecutables"
+if rootDirExists; then
+	logINFO "Directorio raiz del sistema detectado: $GRUPO"
+else
+	logERROR "No se encontro el Directorio raiz	del sistema"
 	return 1
 fi
 
-echo "Verificando la existencia de archivos maestros..."
-if [ ! checkMaeFiles ]; then
-	echo "No existen los archivos maestros"
+if confDirExists; then
+	logINFO "Directorio de configuracion del sistema detectado: $CONFDIR"
+else
+	logERROR "No se encontro el Directorio de configuracion	del sistema"
 	return 1
 fi
 
-echo "Verificando la existencia de tablas maestras..."
-if [ ! checkTableFiles ]; then
-	echo "No existen las tablas maestras"
+if confFileExists; then
+	logINFO "Archivo de configuracion detectado en $CONFFILE"
+else
+	logERROR "No existe el archivo de configuracion InsPro.conf en $CONFDIR"	
 	return 1
 fi
 
-echo "Verificando permisos de ejecucion..."
-if setPermissions;
-then
+logINFO "Leyendo archivo de configuracion..."
+if readVariables; then
+	logINFO "Archivo de configuracion procesado correctamente"
+else
+	logERROR "Archivo de configuracion invalido, reinstale el sistema e intente nuevamente"	
 	return 1
 fi
 
-echo "Estado del Sistema: INICIALIZADO"
+logINFO "Verificando la existencia de ejecutables..."
+if checkBinFilesExists; then
+	logINFO "Archivos ejecutables detectados"
+else
+	logERROR "No existen los comandos ejecutables requeridos en $BINDIR"
+	return 1
+fi
+
+logINFO "Verificando la existencia de archivos maestros..."
+if checkMaeFilesExists; then
+	logINFO "Archivos maestros detectados"
+else
+	logERROR "No existen los archivos maestros requeridos en $MAEDIR"
+	return 1
+fi
+
+logINFO "Verificando la existencia de tablas maestras..."
+if checkTableFilesExists; then
+	logINFO "Tablas maestras detectadas"
+else
+	logERROR "No existen las tablas maestras requeridas en $MAEDIR/tab"
+	return 1
+fi
+
+logINFO "Verificando permisos de ejecucion..."
+if setPermissions; then
+	logINFO "Permisos de ejecucion correctos"
+else	
+	logERROR "No se pudo setear correctamente los permisos de ejecucion"
+	return 1
+fi
+
+logINFO "Exportando variables de ambiente..."
+
+exportEnvVar
+
+logINFO "Se agrego $BINDIR al PATH. PATH= "$PATH
+
+logINFO "Estado del Sistema: INICIALIZADO"
 
 askStartDeamon
 
-#Cerrar archivo de log y terminar proceso
+logINFO "Fin de ejecucion del IniPro"

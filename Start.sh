@@ -8,7 +8,7 @@
 
 source IniFunctions.sh
 
-if ambienteVacio; then 
+if ! environmentNotEmpty; then 
 	echo "Ambiente no inicializado. Ejecute IniPro"
 	echo "No se realizó ninguna acción"
 	exit 1
