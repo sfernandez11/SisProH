@@ -177,14 +177,14 @@ function aceptarArchivo(){
 		mkdir $ACEPDIR/$codgestion
 	fi
 	logInfo  "Aceptado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
-	./mover.sh $1 $ACEPDIR/$codgestion RecPro.sh
+	./mover.sh $1 $ACEPDIR/$codgestion RecPro
 	return 0	
 }
 
 function rechazarArchivo(){
 	
 	logInfo "Movido ${1##*/} - Destino $RECHDIR/${1##*/}"
-	./mover.sh  $1 $RECHDIR RecPro.sh
+	./mover.sh  $1 $RECHDIR RecPro
 	return 0
 }
 
