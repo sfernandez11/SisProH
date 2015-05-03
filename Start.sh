@@ -4,40 +4,51 @@
 #-----------------------------------------------------------------------------------------------------------
 # Ejecutar de esta forma:
 # >$ Start.sh RecPro
+#
+# Si se llama desde un script, pasar su nombre como segundo parametro:
+# "Start.sh RecPro IniPro"
 #------------------------------------------------------------------------------------------------------------
 
 source commonFunctions.sh
 
+CALLER=$2
+
+# 1=loglevel 2=message
+function log(){
+	if [ "$CALLER" == "" ]; then
+		echo "[$1] $2"
+	else
+		echo "[$1] $2"
+		./glog.sh "$CALLER" "$2" "$1"
+	fi
+}
+
 if ! environmentNotEmpty; then 
-	echo "Ambiente no inicializado. Ejecute IniPro"
-	echo "No se realizó ninguna acción"
+	log "ERR" "Ambiente no inicializado. Ejecute IniPro"
+	log "INFO" "No se realizó ninguna acción"
 	exit 1
 fi
 
 if [ ! -f $BINDIR/$1.sh ]; then
-    echo "No existe script $1"
+    log "ERR" "No existe script $1"
     exit 1
 fi
 
-#PID=`ps aux | grep $BINDIR/$1.sh | grep -v grep | awk '{print $2}'`
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
-    echo "El demonio ya se encuentra inicializado, no se realizó ninguna acción"
+    log "WAR" "El demonio ya se encuentra inicializado, no se realizó ninguna acción"
     exit 1
 fi
 
 nohup $1.sh > /dev/null 2>&1 &
 
-#PID=`ps aux | grep $BINDIR/$1.sh | grep -v grep | awk '{print $2}'`
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
-    echo "Se inició el demonio correctamente con PID: $PID" 
+    log "INFO" "Se inició el demonio correctamente con PID: $PID" 
     exit 0
+else 
+	log "ERR" "Error al iniciar el demonio"
+	exit 1
 fi
-
-echo "Error al iniciar el demonio"
-exit 1
-
-

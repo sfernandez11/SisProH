@@ -53,7 +53,7 @@ function VerificarTipo(){
 local tipe=`file $1`
 local tipo=`echo $tipe | sed 's/^\(.*\):\(.*\)/\2/g'`	
 
-if !(echo $tipo | grep '.*text$' &>/dev/null) 
+if !(echo $tipo | grep '^.*text.*$' &>/dev/null) 
 	then 
 		rechazarArchivo $1
 		logInfo "Rechazado  ${1##*/}  - Tipo invalido : $tipo"
@@ -67,7 +67,7 @@ fi
 
 function VerificarFormato(){
 	
-if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[1-9]\{1,\}_[^_]*$' &>/dev/null)
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[0-9]\{1,\}_[^_]*$' &>/dev/null)
 
 	then 
 		rechazarArchivo $1
@@ -135,13 +135,20 @@ function verificar_FECHA_GESTION(){
 local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\([0-3][0-9]\)[^_]\([0-1][0-9]\)[^_]\([1-2][0-9][0-9][0-9]\)/\7\6\5/g'`
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
 local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\);\(.*\)-\4\3\2-g'`
-local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`	
+local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
+logInfo "fecha hasta: $codgestion"
 
 if [ $fecha_hasta = "NULL" ]
 	then
 		#Fecha actual
-		local fecha_hasta=`date +%Y%m%d`
+		fecha_hasta=`date +%Y%m%d`
+	else
+	    fecha_hasta=`grep "^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`
 fi
+
+logInfo "$fecha_file"
+logInfo "$fecha_desde"
+logInfo "$fecha_hasta"
 
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
@@ -198,15 +205,16 @@ function novedadesPedientes(){
 	
 if hayNovedadesPendientes $ACEPDIR;
 	then
-	PID=`pidof ProPro.sh`
+	PID=$(getPid ProPro)
+	
 	if [ "$PID" = "" ]; 
 	then
-		nohup ./ProPro.sh > /dev/null 2>&1
-		PID=`pidof ProPro.sh`
+		./Start.sh ProPro
+		PID=$(getPid ProPro)
 		logInfo "ProPro corriendo bajo el no.: $PID"
 		return 0
 	else
-		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo"
+		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo $PID"
 		return 0
 	fi
 fi
@@ -226,4 +234,9 @@ function hayNovedadesPendientes(){
     done
   fi
   return 1
+}
+
+function getPid(){
+    local ppid=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}' | head -n 1`
+    echo $ppid
 }

@@ -1,31 +1,26 @@
 source commonFunctions.sh
 
-function setLogger(){
-	if [ -f $PWD/glog.sh ];then
-		chmod +x $PWD/glog.sh
-		return 0
-	else	
-		return 1
-	fi
-}
 
 function log(){
-	$PWD/glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
+	if [ "$LOGEXISTS" == "YES" ];then
+		chmod +x glog.sh
+		./glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
+	fi
 }
 
 function logINFO(){
 	echo "[INFO] $1" 
-	#log "$1" "INFO"
+	log "$1" "INFO"
 }	
 function logERROR(){
 	echo "[ERROR] $1"
-	#log "$1" "ERR"
+	log "$1" "ERR"
 	usetEnvVar
 }
 
 function logWARNING(){
 	echo "[WARNING] $1" 
-	#log "$1" "WAR"
+	log "$1" "WAR"
 }
 
 function checkMaeFilesExists(){	
@@ -126,7 +121,7 @@ function setPermissions(){
 
 function startDeamon(){
 	logINFO "Iniciando el demonio RecPro"
-	$BINDIR/Start.sh RecPro
+	$BINDIR/Start.sh RecPro IniPro
 }
 
 function noStartDeamon(){
@@ -213,6 +208,7 @@ function readVariables(){
  		return 1		
  	else
  		logINFO "Se obtuvo el directorio de ejecutables $BINDIR"
+ 		showDirectory $BINDIR
  	fi
  
  	MAEDIR=`grep "MAEDIR" $CONFFILE | cut -s -f2 -d'='`
@@ -222,6 +218,7 @@ function readVariables(){
  		return 1
  	else
  		logINFO "Se obtuvo el directorio de tablas maestras $MAEDIR"
+ 		showDirectory $MAEDIR
  	fi
  
  	NOVEDIR=`grep "NOVEDIR" $CONFFILE | cut -s -f2 -d'='`
@@ -294,6 +291,7 @@ function readVariables(){
  		return 1
  	else
  		logINFO "Se obtuvo el directorio para logs $LOGDIR"
+ 		showDirectory $LOGDIR
  	fi
  
  	LOGSIZE=`grep "LOGSIZE" $CONFFILE | cut -s -f2 -d'='`
@@ -305,6 +303,33 @@ function readVariables(){
  	 	logINFO "Se obtuvo el valor de LOGSIZE $LOGSIZE"
  	fi
  	return 0
+}
+
+function showDirectory(){
+  if [ -d "$1" ]
+  then
+    if [ "$(ls -A $1)" ]
+    then      
+      local var="Contenido: "
+      for file in $1/* ;
+      do
+        if [ ${#var} -ge 70 ]
+        then
+          logINFO "$var"
+          var=""         
+        fi
+        var=$var" ${file##*/}"
+      done
+      if [ ${#var} -ge 1 ]
+      then
+        logINFO "$var"
+      fi
+    else
+    logWARNING "Directorio vacio."
+    fi
+  else
+    logWARNING "Directorio no existe."
+  fi
 }
 
 function exportEnvVar(){
@@ -320,6 +345,7 @@ export DUPDIR
 export LOGDIR
 export LOGSIZE
 export PATH=$PATH:$BINDIR
+export LOGEXISTS="YES"
 }
 
 
@@ -335,4 +361,5 @@ export INFODIR=""
 export DUPDIR=""
 export LOGDIR=""
 export LOGSIZE=""
+export LOGEXISTS=""
 }

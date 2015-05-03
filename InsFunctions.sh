@@ -399,6 +399,34 @@ function verifyDirsExisting(){
   done
 }
 
+function showDirContent(){
+  if [ -d "$1" ]
+  then
+    if [ "$(ls -A $1)" ]
+    then
+      #logInfo "Contenido:"
+      local var="Contenido: "
+      for file in $1/* ;
+      do
+        if [ ${#var} -ge 70 ]
+        then
+          logInfo "$var"
+          var=""
+          #logInfo "${file##*/}"
+        fi
+        var=$var" ${file##*/}"
+      done
+      if [ ${#var} -ge 1 ]
+      then
+        logInfo "$var"
+      fi
+    else
+    logInfo "Directorio vacio."
+    fi
+  else
+    logInfo "Directorio no existe."
+  fi
+}
 
 function askInstall(){
 echo "Inicia la instalación? Si – No"
