@@ -6,7 +6,25 @@
 # >$ Stop.sh RecPro
 #------------------------------------------------------------------------------------------------------------
 
-source IniFunctions.sh
+source commonFunctions.sh
+
+CALLER=$2
+
+# 1=loglevel 2=message
+function log(){
+    if [ "$CALLER" == "" ]; then
+        echo "[$1] $2"
+    else
+        echo "[$1] $CALLER $2"
+        ./glog.sh "$CALLER" "$2" "$1"
+    fi
+}
+
+if ! environmentNotEmpty; then 
+    log "ERR" "Ambiente no inicializado. Ejecute IniPro"
+    log "INFO" "No se realizó ninguna acción"
+    exit 1
+fi
 
 if [ ! -f $BINDIR/$1.sh ]; then
     echo "No existe script $1"

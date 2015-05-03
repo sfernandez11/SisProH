@@ -7,12 +7,8 @@
 #------------------------------------------------------------------------------------------------------------
 
 source IniFunctions.sh
-source InsFunctions.sh
 
-if ! setLogger ; then
-	echo "No se encontro el glog. Reinstale el sistema e intente nuevamente"
-	return 1
-fi
+logINFO "Comienzo de ejecucion de IniPro"
 
 if ! environmentIsEmpty ; then 
 	logINFO "Ambiente ya inicializado. Si quiere reiniciar termine su sesion e ingrese nuevamente"
@@ -32,6 +28,7 @@ fi
 
 if confDirExists; then
 	logINFO "Directorio de configuracion del sistema detectado: $CONFDIR"
+	showDirectory $CONFDIR
 else
 	logERROR "No se encontro el Directorio de configuracion	del sistema"
 	return 1
