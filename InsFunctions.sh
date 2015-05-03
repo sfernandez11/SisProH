@@ -3,6 +3,8 @@
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------------------
 
+source commonFunctions.sh
+
 declare -a variables
 declare -a messages
 declare -a installed
@@ -126,13 +128,6 @@ function noCompatiblePerlVersion(){
   return 0
 }
 
-function isInteger(){
-  case $1 in
-    ''|*[!0-9]*) return 1;;
-    *) return 0 ;;
-  esac
-}
-
 function isDirSimple(){
   if echo $1 | grep -E '^/?([[:alnum:]]+[_.-]*[[:alnum:]]*)+/?$' > /dev/null;
   then
@@ -238,35 +233,6 @@ function showStatus(){
   showDirContent $LOGDIR
   logInfo "Tamaño máximo para archivos de log: $LOGSIZE Kb"
     
-}
-
-function showDirContent(){
-  if [ -d "$1" ]
-  then
-    if [ "$(ls -A $1)" ]
-    then
-      #logInfo "Contenido:"
-      local var="Contenido: "
-      for file in $1/* ;
-      do
-        if [ ${#var} -ge 70 ]
-        then
-          logInfo "$var"
-          var=""
-          #logInfo "${file##*/}"
-        fi
-        var=$var" ${file##*/}"
-      done
-      if [ ${#var} -ge 1 ]
-      then
-        logInfo "$var"
-      fi
-    else
-    logInfo "Directorio vacio."
-    fi
-  else
-    logInfo "Directorio no existe."
-  fi
 }
 
 function getArraySize(){

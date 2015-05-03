@@ -6,7 +6,7 @@
 # >$ Start.sh RecPro
 #------------------------------------------------------------------------------------------------------------
 
-source IniFunctions.sh
+source commonFunctions.sh
 
 if ! environmentNotEmpty; then 
 	echo "Ambiente no inicializado. Ejecute IniPro"
