@@ -21,7 +21,9 @@ function writeRecordOutput() {
 		local fechaNorma=`echo $line | sed 's/^\([^;]*\);\(.*\)/\1/'`
 		#codigo de gestion para cuando guardo los archivos
 		codigoGestion=`echo $1 | cut -d "_" -f1`
-		if FECHA_NORMA_VALIDA=$(chequearFechaValida $fechaNorma)
+		#obtengo el anio en curso para distintos chequeos.
+		anioEnCurso=`date +%Y`
+		if FECHA_NORMA_VALIDA=$(chequearFechaValida $fechaNorma $anioEnCurso)
 		then
 			if ! FECHA_NORMA_EN_RANGO_GESTION=$(chequearFechaValidaRangoGestion $fechaNorma)
 			then
@@ -60,7 +62,6 @@ function writeRecordOutput() {
 				registroRechazado='SI'
 				motivoRechazo='Codigo de firma invalido'
 			else
-				local anioEnCurso=`date +%d-%m-%Y | cut -d "-" -f3`
 				obtenerNumeroNormaCorriente $codigoGestion $anioEnCurso $codigoEmisor $codigoNorma
 			fi
 		fi
@@ -147,7 +148,7 @@ function chequearOCreaSubdirectorio () {
 }
 
 #Chequea si la fecha con formato dd/mm/aaaa es una fecha valida. En caso de serlo devuelve 0, sino 1.
-#Recibe en $1 la fecha a analizar
+#Recibe en $1 la fecha a analizar y en $2 en anio en curso
 function chequearFechaValida() {
 	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
 	local dia=`echo $1 | cut -d "/" -f1`
@@ -161,7 +162,7 @@ function chequearFechaValida() {
 		return 1
 	fi
 	local anio=`echo $1 | cut -d "/" -f3`
-	if [ $anio -lt 1900 -o $anio -gt 2015 ]
+	if [ $anio -lt 1900 -o $anio -gt $2 ]
 	then
 		return 1
 	fi
