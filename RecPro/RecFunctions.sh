@@ -53,7 +53,7 @@ function VerificarTipo(){
 local tipe=`file $1`
 local tipo=`echo $tipe | sed 's/^\(.*\):\(.*\)/\2/g'`	
 
-if !(echo $tipo | grep '.*text$' &>/dev/null) 
+if !(echo $tipo | grep '^.*text.*$' &>/dev/null) 
 	then 
 		rechazarArchivo $1
 		logInfo "Rechazado  ${1##*/}  - Tipo invalido : $tipo"
