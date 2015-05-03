@@ -28,14 +28,18 @@ then
   readConf
   verifyDirsExisting
   initialize
+  setEnviroment
   if installComplete;
   then
-    setEnviroment
     showStatus
     logInfo "Estado de la instalación: COMPLETA"
+    logInfo "Proceso de Instalación Cancelado"
     exit 0
   fi
-  echo "Verificando si esta completo ..."
+  # al llegar aca la instalacion esta incompleta
+  
+else
+  initialize
 fi
 
 
@@ -52,8 +56,6 @@ then
   logError "Se requiere perl 5 o superior"
   exit 1
 fi
-
-initialize
 
 until [ "$CONFIRM_INSTALL" = "SI" ]
 do
@@ -82,16 +84,19 @@ do
 
   # se cumplieron todas las validaciones confirmo inicio
   showStatus
+  logInfo "Estado de la instalación: LISTA"
   askInstall
 
 done
 
 # creacion de directorios
+logInfo "Creando Estructuras de directorio . . ."
 createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
+createDirs "$MAEDIR/tab"
 
 writeConf
 installBinaries
 installTabs
-unsetVariables
+#unsetVariables
 

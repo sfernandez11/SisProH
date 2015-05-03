@@ -98,7 +98,7 @@ function createDirs(){
     fi
     if createDirWithSubdir "$var";
     then
-      logInfo "Ok directorio $var creado"
+      logInfo "Directorio $var creado"
     fi
   done
 }
@@ -347,6 +347,7 @@ function readConf(){
 }
 
 function installBinaries(){
+  logInfo "Instalando Programas y Funciones"
   cp -a *.sh $BINDIR
   cp -a RecPro/*.sh $BINDIR
   cp -a ProPro/*.sh $BINDIR
@@ -354,9 +355,10 @@ function installBinaries(){
 }
 
 function installTabs(){
-  cp -a ProPro/ACEPDIR/* $NOVEDIR
-  cp -a ProPro/MAEDIR/* $MAEDIR
-  cp -ar ProPro/MAEDIR/tab $MAEDIR
+  logInfo "Instalando Archivos Maestros y Tablas"
+  cp -a pruebas/*.mae $MAEDIR
+  cp -ar pruebas/*.tab "$MAEDIR/tab"
+  cp -a pruebas/novedades/* $NOVEDIR
 }
 
 function unsetVariables(){
@@ -418,22 +420,24 @@ function installComplete() {
       return 1
     fi
   done
+  if [ $(binariesNotInstalled) -gt 0 ];
+  then
+    return 1
+  fi
   return 0
 }
 
+function binariesMissing(){
+  local origen=$1
+  diff -q $origen $BINDIR | grep $origen:.*\.sh | wc -l
+}
 
-#function binariesInstalled(){
-#diff -q $PWD $PWD/grupo02/bin
-#diff -q $PWD $PWD/grupo02/bin | grep \.sh
-#diff -q $PWD $PWD/grupo02/bin | grep \.sh | cut -f2 -d':'
-#diff -q $PWD $PWD/grupo02/bin | grep \.sh | cut -f2 -d':' | cut -c2-
-#diff -q "$PWD/RecPro" $PWD/grupo02/bin | grep \.sh | cut -f2 -d':' | cut -c2-
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep \.sh | cut -f2 -d':' | cut -c2-
-#diff -q $PWD/RecPro $PWD/grupo02/bin
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro\.sh | cut -f2 -d':' | cut -c2-
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro.*\.sh | cut -f2 -d':' | cut -c2-
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro.*\.sh
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro.*\.sh | cut -c9-
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro.*\.sh | cut -c9- |sed s;: ;/;
-#diff -q $PWD/RecPro $PWD/grupo02/bin | grep $PWD/RecPro.*\.sh | cut -c9- | sed 's;: ;/;'
-#}
+function binariesNotInstalled(){
+  local binBase=$(binariesMissing $PWD)
+  local binRecPro=$(binariesMissing "$PWD/RecPro")
+  local binProPro=$(binariesMissing "$PWD/ProPro")
+  #echo "Faltan $binBase de pwd, $binRecPro de RecPro y $binProPro de ProPro"
+  let total=$binBase+$binRecPro+$binProPro
+  #echo "En total faltan $total binarios"
+  echo $total
+}
