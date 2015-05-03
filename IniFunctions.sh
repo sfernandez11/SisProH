@@ -245,7 +245,7 @@ function readVariables(){
  		logWARNING "Directorio de Archivos Aceptados: ACEPDIR no existe o es invalido "$ACEPDIR
  		return 1
  	else
- 		logINFO "Se obtuvo el directorio de archivos ceptados $ACEPDIR"
+ 		logINFO "Se obtuvo el directorio de archivos aceptados $ACEPDIR"
  	fi
  
  	RECHDIR=`grep "RECHDIR" $CONFFILE | cut -s -f2 -d'='`
