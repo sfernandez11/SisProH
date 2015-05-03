@@ -7,124 +7,91 @@
 #------------------------------------------------------------------------------------------------------------
 
 source IniFunctions.sh
+source InsFunctions.sh
 
-if ! checkAmbiente; then 
-	echo "Ambiente ya inicializado"
+if ! setLogger ; then
+	echo "No se encontro el glog. Reinstale el sistema e intente nuevamente"
 	return 1
 fi
 
-GRUPO="$(cd ../; pwd)"
-
-if confFileNotFound; then
-	echo "No existe el archivo de configuracion"
+if ! environmentIsEmpty ; then 
+	logINFO "Ambiente ya inicializado. Si quiere reiniciar termine su sesion e ingrese nuevamente"
 	return 1
 fi
 
+GRUPO=$(getRootDir)
 CONFDIR=$GRUPO/conf
 CONFFILE=$CONFDIR/InsPro.conf
 
-echo "Exportando variables de ambiente..."
-
-echo "Directorio raiz del sistema: "$GRUPO
-echo "Directorio de configuracion: "$CONFDIR
-
-if [ "$BINDIR" == "" ]; then
-	BINDIR=`grep "BINDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de Ejecutables: BINDIR "$BINDIR
-	#TODO Listar files en BINDIR
-fi
-
-if [ "$MAEDIR" == "" ]; then
-	MAEDIR=`grep "MAEDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de Maestros y Tablas: MAEDIR "$MAEDIR
-	#TODO Listar files in MAEDIR
-fi
-
-if [ "$NOVEDIR" == "" ]; then
-	NOVEDIR=`grep "NOVEDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de recepción de documentos para protocolización: NOVEDIR "$NOVEDIR
-fi
-
-if [ "$DATASIZE" == "" ]; then
-	DATASIZE=`grep "DATASIZE" $CONFFILE | cut -s -f2 -d'='`
-	echo "DATASIZE es: "$DATASIZE
-fi
-
-if [ "$ACEPDIR" == "" ]; then
-	ACEPDIR=`grep "ACEPDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de Archivos Aceptados: ACEPDIR "$ACEPDIR
-fi
-
-if [ "$RECHDIR" == "" ]; then
-	RECHDIR=`grep "RECHDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de Archivos Rechazados: RECHDIR "$RECHDIR
-fi
-
-if [ "$PROCDIR" == "" ]; then
-	PROCDIR=`grep "PROCDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio de Archivos Protocolizados: PROCDIR "$PROCDIR
-fi
-
-if [ "$INFODIR" == "" ]; then
-	INFODIR=`grep "INFODIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio para informes y estadísticas: INFODIR "$INFODIR
-fi
-
-if [ "$DUPDIR" == "" ]; then
-	DUPDIR=`grep "DUPDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Nombre para el repositorio de duplicados: DUPDIR "$DUPDIR
-fi
-
-if [ "$LOGDIR" == "" ]; then
-	LOGDIR=`grep "LOGDIR" $CONFFILE | cut -s -f2 -d'='`
-	echo "Directorio para Archivos de Log: LOGDIR "$LOGDIR
-fi
-
-if [ "$LOGSIZE" == "" ]; then
-	LOGSIZE=`grep "LOGSIZE" $CONFFILE | cut -s -f2 -d'='`
-	echo "LOGSIZE: "$LOGSIZE
-fi
-
-export GRUPO
-export MAEDIR
-export NOVEDIR
-export DATASIZE
-export ACEPDIR
-export RECHDIR
-export PROCDIR
-export INFODIR
-export DUPDIR
-export LOGDIR
-export LOGSIZE
-
-export PATH=$PATH:$BINDIR
-echo "Se agrego $BINDIR al PATH. PATH= "$PATH
-
-echo "Fin de exportar variables de ambiente"
-
-echo "Verificando la existencia de ejecutables..."
-if [ ! checkBinFiles ]; then
-	echo "No existen los comandos ejecutables"
+if rootDirExists; then
+	logINFO "Directorio raiz del sistema detectado: $GRUPO"
+else
+	logERROR "No se encontro el Directorio raiz	del sistema"
 	return 1
 fi
 
-echo "Verificando la existencia de archivos maestros..."
-if [ ! checkMaeFiles ]; then
-	echo "No existen los archivos maestros"
+if confDirExists; then
+	logINFO "Directorio de configuracion del sistema detectado: $CONFDIR"
+else
+	logERROR "No se encontro el Directorio de configuracion	del sistema"
 	return 1
 fi
 
-echo "Verificando la existencia de tablas maestras..."
-if [ ! checkTableFiles ]; then
-	echo "No existen las tablas maestras"
+if confFileExists; then
+	logINFO "Archivo de configuracion detectado en $CONFFILE"
+else
+	logERROR "No existe el archivo de configuracion InsPro.conf en $CONFDIR"	
 	return 1
 fi
 
-echo "Asignando permisos de ejecucion..."
-checkPerm
+logINFO "Leyendo archivo de configuracion..."
+if readVariables; then
+	logINFO "Archivo de configuracion procesado correctamente"
+else
+	logERROR "Archivo de configuracion invalido, reinstale el sistema e intente nuevamente"	
+	return 1
+fi
 
-echo "Estado del Sistema: INICIALIZADO"
+logINFO "Verificando la existencia de ejecutables..."
+if checkBinFilesExists; then
+	logINFO "Archivos ejecutables detectados"
+else
+	logERROR "No existen los comandos ejecutables requeridos en $BINDIR"
+	return 1
+fi
+
+logINFO "Verificando la existencia de archivos maestros..."
+if checkMaeFilesExists; then
+	logINFO "Archivos maestros detectados"
+else
+	logERROR "No existen los archivos maestros requeridos en $MAEDIR"
+	return 1
+fi
+
+logINFO "Verificando la existencia de tablas maestras..."
+if checkTableFilesExists; then
+	logINFO "Tablas maestras detectadas"
+else
+	logERROR "No existen las tablas maestras requeridas en $MAEDIR/tab"
+	return 1
+fi
+
+logINFO "Verificando permisos de ejecucion..."
+if setPermissions; then
+	logINFO "Permisos de ejecucion correctos"
+else	
+	logERROR "No se pudo setear correctamente los permisos de ejecucion"
+	return 1
+fi
+
+logINFO "Exportando variables de ambiente..."
+
+exportEnvVar
+
+logINFO "Se agrego $BINDIR al PATH. PATH= "$PATH
+
+logINFO "Estado del Sistema: INICIALIZADO"
 
 askStartDeamon
 
-#Cerrar archivo de log y terminar proceso
+logINFO "Fin de ejecucion del IniPro"

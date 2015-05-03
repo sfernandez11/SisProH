@@ -15,16 +15,8 @@
 # importo mi archivo con funciones
 source InsFunctions.sh
 
-#declare -a variables
-#declare -a messages
-#declare -a installed
-#declare -a values
-
 GRUPO=$PWD/grupo02
 CONFDIR=$GRUPO/conf
-initialize
-
-
 
 # TODO: CONFDIR ya deberia existir
 createDirs $CONFDIR
@@ -34,12 +26,17 @@ if [ -f $CONFDIR/InsPro.conf ]
 then
   echo "Ya esta instalado."
   readConf
-  echo ${variables[@]}
-  exit 0
-
+  verifyDirsExisting
+  initialize
+  if installComplete;
+  then
+    setEnviroment
+    showStatus
+    logInfo "Estado de la instalación: COMPLETA"
+    exit 0
+  fi
+  echo "Verificando si esta completo ..."
 fi
-
-
 
 
 # valido version de perl
@@ -56,9 +53,9 @@ then
   exit 1
 fi
 
+initialize
 
-CONFIRM_INSTALL=""
-until [ "$CONFIRM_INSTALL" = "SI" -o "$CONFIRM_INSTALL" = "S" ]
+until [ "$CONFIRM_INSTALL" = "SI" ]
 do
   if [ -n "$CONFIRM_INSTALL" ]
   then
@@ -68,6 +65,7 @@ do
   fi
   # pido al usuario que ingrese los valores de las variables
   askVariables
+  setEnviroment
 
   # se hacen todas las validaciones
 
@@ -84,10 +82,7 @@ do
 
   # se cumplieron todas las validaciones confirmo inicio
   showStatus
-  logInfo "Inicia la instalación? Si / No: "
-  read -n 2 -p '    Si / No (Si): ' CONFIRM_INSTALL
-
-  CONFIRM_INSTALL=`echo $CONFIRM_INSTALL | tr '[:lower:]' '[:upper:]' | sed s:^$:SI:`
+  askInstall
 
 done
 
@@ -100,4 +95,3 @@ installBinaries
 installTabs
 unsetVariables
 
-# TODO: Limpiar variables

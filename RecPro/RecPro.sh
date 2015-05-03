@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 
 ########################################################################
 #                                                                      #
@@ -32,27 +32,24 @@
 ########################################################################
 source RecFunctions.sh
 
-MAEDIR=../MAEDIR
-NOVEDIR=../NOVEDIR/*
-ACEPDIR=../ACEPDIR
-RECHDIR=rechazados
-LOGDIR=log
-SLEEP_TIME=$1
+SLEEP_TIME=20
 nroCiclo=0
 INI=0
+
 
 #Valido si el ambiente fue inicializado correctamente
 if [ -n $INI ] # ambiente correcto, $VAL con valor 0
 	then
-		#while [[ true ]]; do
-		    logInfo "Desperta Demonio - Ciclo: $nroCiclo" "INFO"
-			procesarNovedades $NOVEDIR $MAEDIR $ACEPDIR
+		while [[ true ]]; do
+		    logInfo "Demonio despierto - Ciclo: $nroCiclo"
+			procesarNovedades
+			novedadesPedientes
 			let nroCiclo++
-			logInfo "Dormir Demonio" "INFO"
+			logInfo "Demonio dormir"
 			sleep $SLEEP_TIME	
-		#done 
+		done 
 	else
-		logError "El ambiente no se inicializo correctamente" "ERR"
-		logError "No es posible su ejecucion" "ERR"
-		Exit 1
+		logError "El ambiente no se inicializo correctamente"
+		logError "No es posible su ejecucion"
+		exit 1
 fi 
