@@ -17,8 +17,8 @@ function logError(){
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
 function procesarNovedades(){	
-		
-if hayNovedadesPendientes $NOVEDIR/*;
+
+if hayNovedadesPendientes $NOVEDIR;
 	then	
 	for file in $NOVEDIR/*
 	do
@@ -196,7 +196,7 @@ function rechazarArchivo(){
 
 function novedadesPedientes(){
 	
-if hayNovedadesPendientes $ACEPDIR/*/;
+if hayNovedadesPendientes $ACEPDIR;
 	then
 	PID=`pidof ProPro.sh`
 	if [ "$PID" = "" ]; 
@@ -214,14 +214,16 @@ return 0
 }
 
 function hayNovedadesPendientes(){
-	
-for directorio in $1
- do		
-    local dir=`find $directorio -type f | wc -l`
-	if [ ! $dir -eq 0 ]
-	then
-		return 0
-	fi
-done
-return 1
+  if [ "$(ls -A $1)" ]
+  then
+    for directorio in $1
+     do		
+      local dir=`find $directorio -type f | wc -l`
+	    if [ ! $dir -eq 0 ]
+	    then
+		    return 0
+	    fi
+    done
+  fi
+  return 1
 }
