@@ -135,15 +135,20 @@ function verificar_FECHA_GESTION(){
 local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\([0-3][0-9]\)[^_]\([0-1][0-9]\)[^_]\([1-2][0-9][0-9][0-9]\)/\7\6\5/g'`
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
 local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\);\(.*\)-\4\3\2-g'`
-local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)-3-g'`	
+local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
+logInfo "fecha hasta: $codgestion"
 
 if [ $fecha_hasta = "NULL" ]
 	then
 		#Fecha actual
-		local fecha_hasta=`date +%Y%m%d`
+		fecha_hasta=`date +%Y%m%d`
 	else
-	    local fecha_hasta=`grep "^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`
+	    fecha_hasta=`grep "^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`
 fi
+
+logInfo "$fecha_file"
+logInfo "$fecha_desde"
+logInfo "$fecha_hasta"
 
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
