@@ -198,15 +198,16 @@ function novedadesPedientes(){
 	
 if hayNovedadesPendientes $ACEPDIR;
 	then
-	PID=`pidof ProPro.sh`
+	PID=$(getPid ProPro)
+	
 	if [ "$PID" = "" ]; 
 	then
-		nohup ./ProPro.sh > /dev/null 2>&1
-		PID=`pidof ProPro.sh`
+		./Start.sh ProPro
+		PID=$(getPid ProPro)
 		logInfo "ProPro corriendo bajo el no.: $PID"
 		return 0
 	else
-		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo"
+		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo $PID"
 		return 0
 	fi
 fi
@@ -226,4 +227,9 @@ function hayNovedadesPendientes(){
     done
   fi
   return 1
+}
+
+function getPid(){
+    local ppid=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}' | head -n 1`
+    echo $ppid
 }
