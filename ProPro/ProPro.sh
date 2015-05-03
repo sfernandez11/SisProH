@@ -35,17 +35,18 @@ do
 			archivosRechazados=$(( archivosRechazados + 1 ))
 			$BINDIR/mover.sh  $dir/$doc $RECHDIR "ProPro" 
 		else
-			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`
+			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`	
 			hasNorma=`cat $MAEDIR/tab/nxe.tab | grep $normaEmisor`
+			$BINDIR/glog.sh "ProPro" "has norma que devuelve: $hasNorma"
 			if [ -z $hasNorma ]
 			then
-				$(chequearOCreaSubdirectorio $PROCDIR "$gest")
-				$BINDIR/mover.sh $dir/$doc $PROCDIR/$gest/$doc "ProPro"
-			else
 				$BINDIR/glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
 				archivosRechazados=$(( archivosRechazados + 1 ))
 				$BINDIR/mover.sh $dir/$doc $RECHDIR "ProPro"
 				continue
+			else
+				$(chequearOCreaSubdirectorio $PROCDIR "$gest")
+				$BINDIR/mover.sh $dir/$doc $PROCDIR/$gest "ProPro"
 			fi
 			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
 			sed '/^$' $PROCDIR/$gest/$doc > $PROCDIR/$gest/$doc.temporal
