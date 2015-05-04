@@ -81,7 +81,8 @@ function obtenerNumeroNormaCorriente () {
 	local archivo=$MAEDIR/tab/axg.tab
 	#Me creo un archivo temporal para mover el original y trabajar con el temporal y luego de modificarlo, renombrar.
 	$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
-	cp $archivo $MAEDIR/tab/axg.tabtemp
+	#cp $archivo $MAEDIR/tab/axg.tabtemp
+	sed -e '$a\' $archivo >> $MAEDIR/tab/axg.tabtemp
 	archivoTemp=$MAEDIR/tab/axg.tabtemp
 	$(chequearOCreaSubdirectorio $MAEDIR/tab "ant")
 	$BINDIR/mover.sh "$archivo" "$MAEDIR/tab/ant" "ProPro"
