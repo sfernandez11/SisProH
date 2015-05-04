@@ -94,7 +94,7 @@ function obtenerNumeroNormaCorriente () {
 		#Agrego al final de la tabla un nuevo contador para el codigo de norma y emisor
 		local cantLineasArchivo=`wc -l $archivoTemp | cut -d " " -f1`
 		local idContadorActual=`awk "NR == $cantLineasArchivo" $archivoTemp | cut -d ";" -f1`
-		(( idContadorActual++ ))
+		idContadorActual=$(( idContadorActual + 1))
 		local usuario=`whoami`
 		fecha=`date +%d/%m/%Y`
 		echo "$idContadorActual;"$1";"$2";"$3";"$4";2;"$usuario";"$fecha"" >> $archivoTemp
@@ -103,7 +103,8 @@ function obtenerNumeroNormaCorriente () {
 		$BINDIR/glog.sh "ProPro" "Se encontro la norma en la tabla, se tomara el numero de norma y se actualizara el valor en la tabla"
 		local numeroLinea=`echo $resultadoGrep | cut -d ":" -f1`
 		numeroNorma=`echo $resultadoGrep | cut -d ";" -f6`
-		$(incrementarNumeroEnTabla $(( numeroNorma + 1)) $numeroLinea)
+		numeroNorma=$(( numeroNorma + 1))
+		$(incrementarNumeroEnTabla $numeroNorma $numeroLinea)
 		$BINDIR/glog.sh "ProPro" "Se incremento el numero de norma en la tabla para el codigo de norma $4 y codigo de emisor $3"
 	fi
 	#Renombro mi archivo temporal de tabla de contadores por su nombre original.
