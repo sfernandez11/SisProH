@@ -44,19 +44,16 @@ do
 				archivosRechazados=$(( archivosRechazados + 1 ))
 				$BINDIR/mover.sh $dir/$doc $RECHDIR "ProPro"
 				continue
-			else
-				$(chequearOCreaSubdirectorio $PROCDIR "$gest")
-				$BINDIR/mover.sh $dir/$doc $PROCDIR/$gest "ProPro"
 			fi
-			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
-			sed '/^$' $PROCDIR/$gest/$doc > $PROCDIR/$gest/$doc.temporal
-			DOCTYPE= getDocType $doc
+			#$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
+			#sed '/^$' $dir/$doc > $dir/$doc.t
+			DOCTYPE=$(getDocType $doc)
 			archivosProcesados=$(( archivosProcesados + 1 ))
-			writeRecordOutput $PROCDIR/$gest/$doc.temporal $DOCTYPE
-			$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
-			rm  $PROCDIR/$gest/$doc.temporal
+			writeRecordOutput $dir/$doc $DOCTYPE $doc
+			#$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
+			#rm  $dir/$doc.t
 			$BINDIR/glog.sh "ProPro" "Muevo el archivo procesado a la carpeta proc"
-			$BINDIR/mover.sh $PROCDIR/$gest/$doc $PROCDIR/proc "ProPro"
+			$BINDIR/mover.sh $dir/$doc $PROCDIR/proc "ProPro"
 		fi
 	done
 done

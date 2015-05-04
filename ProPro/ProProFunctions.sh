@@ -3,24 +3,19 @@
 #Funcion que se encarga de armar los registros de salida para los registros históricos, corrientes
 # y rechazados.
 
-#recibe por parametros: 
+# recibe por parametros: 
 # $1 archivo de input
 # $2 tipo de archivo siendo "HIST" archivos historicos, "CORR" archivos corrientes
+# $3 el doc
 
 function writeRecordOutput() {
-	local i=0
-	while read line
+	while read line || [[ -n "$line" ]]
 	do
-		if [ $i -eq 0  ]
-		then
-			i=$(( i + 1))
-			continue
-		fi
 		local registroRechazado=''
 		local motivoRechazo=''
 		local fechaNorma=`echo $line | sed 's/^\([^;]*\);\(.*\)/\1/'`
 		#codigo de gestion para cuando guardo los archivos
-		codigoGestion=`echo $1 | cut -d "_" -f1`
+		codigoGestion=`echo $3 | cut -d "_" -f1`
 		#obtengo el anio en curso para distintos chequeos.
 		anioEnCurso=`date +%Y`
 		if FECHA_NORMA_VALIDA=$(chequearFechaValida $fechaNorma $anioEnCurso)
@@ -36,18 +31,13 @@ function writeRecordOutput() {
 		fi
 		local anioNorma=`echo $fechaNorma | cut -d "/" -f3`
 		local datosRestantesRegistro=`echo $line | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\3;\4;\5;\6;\7;\8;\9/'`
-		local datosFinalRegistro=`echo $1 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
-		local codigoNorma=`echo $1 | cut -d "_" -f2`
+		local datosFinalRegistro=`echo $3 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
+		local codigoNorma=`echo $3 | cut -d "_" -f2`
 		numeroNorma=0		
-			
+	
 		if [ $2 = "HIST" ]
 		then
 			numeroNorma=`echo $line | cut -d ";" -f2`
-			if [ -n $numeroNorma ] 
-			then
-				$BINDIR/glog.sh "ProPro" "Numero de norma no es un numero, se procede a convertir en 0 que es numero de norma invalida"
-				numeroNorma=0
-			fi
 			if [ $numeroNorma -le 0 ]
 			then
 				registroRechazado='SI'
@@ -55,7 +45,7 @@ function writeRecordOutput() {
 			fi
 		elif [ "$2" = "CORR" ]
 		then
-			local codigoEmisor=`echo $1 | cut -d "_" -f3`
+			local codigoEmisor=`echo $3 | cut -d "_" -f3`
 			local codigoFirma=`echo $datosRestantesRegistro | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\6/'`
 			if ! CODIGO_DE_FIRMA_VALIDO=$(chequearCodigoFirmaValido $codigoEmisor $codigoFirma)
 			then
@@ -67,16 +57,18 @@ function writeRecordOutput() {
 		fi
 		if [ -z $registroRechazado ]
 		then
-			local registroGuardar="$1;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
+			local registroGuardar="$3;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
 			$(chequearOCreaSubdirectorio $PROCDIR $codigoGestion)						
 			echo "$registroGuardar" >> $PROCDIR/$codigoGestion/$anioNorma.$codigoNorma
-			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma" 		
+			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma"
+			continue 		
 		else
-			echo "$1;"$motivoRechazo";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
-			$BINDIR/glog.sh "ProPro" "Se guardo el registro $1;$motivoRechazo;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
+			echo "$3;"$motivoRechazo";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
+			$BINDIR/glog.sh "ProPro" "Se guardo el registro $3;$motivoRechazo;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
+			continue
 		fi
 	done < "$1"
-	$BINDIR/glog.sh "ProPro" "Se termino de procesar el archivo $1"
+	$BINDIR/glog.sh "ProPro" "Se termino de procesar el archivo $3"
 return 0
 
 }
