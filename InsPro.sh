@@ -93,7 +93,7 @@ done
 logInfo "Creando Estructuras de directorio . . ."
 createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
-createDirs "$MAEDIR/tab"
+createDirs "$MAEDIR/tab" "$MAEDIR/tab/ant" "$PROCDIR/proc"
 
 writeConf
 installBinaries

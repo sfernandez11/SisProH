@@ -33,27 +33,28 @@ do
 		then
 			$BINDIR/glog.sh "ProPro" "Se rechaza el archivo $doc por estar duplicado."
 			archivosRechazados=$(( archivosRechazados + 1 ))
-			$BINDIR/mover.sh  $ACEPDIR/$dir/$doc $RECHDIR "ProPro" 
+			$BINDIR/mover.sh  $dir/$doc $RECHDIR "ProPro" 
 		else
-			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`
+			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`	
 			hasNorma=`cat $MAEDIR/tab/nxe.tab | grep $normaEmisor`
+			$BINDIR/glog.sh "ProPro" "has norma que devuelve: $hasNorma"
 			if [ -z $hasNorma ]
 			then
-				$(chequearOCreaSubdirectorio $PROCDIR "$dir")
-				$BINDIR/mover.sh $ACEPDIR/$dir/$doc $PROCDIR/$dir/$doc "ProPro"
-			else
 				$BINDIR/glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
 				archivosRechazados=$(( archivosRechazados + 1 ))
 				$BINDIR/mover.sh $dir/$doc $RECHDIR "ProPro"
 				continue
+			else
+				$(chequearOCreaSubdirectorio $PROCDIR "$gest")
+				$BINDIR/mover.sh $dir/$doc $PROCDIR/$gest "ProPro"
 			fi
 			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
-			sed '/^$' $PROCDIR/$dir/$doc > $PROCDIR/$dir/$doc.temporal
+			sed '/^$' $PROCDIR/$gest/$doc > $PROCDIR/$gest/$doc.temporal
 			DOCTYPE= getDocType $doc
 			archivosProcesados=$(( archivosProcesados + 1 ))
-			writeRecordOutput $PROCDIR/$dir/$doc.temporal $DOCTYPE
+			writeRecordOutput $PROCDIR/$gest/$doc.temporal $DOCTYPE
 			$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
-			rm  $PROCDIR/$dir/$doc.temporal
+			rm  $PROCDIR/$gest/$doc.temporal
 		fi
 	done
 done
