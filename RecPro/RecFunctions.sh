@@ -66,12 +66,34 @@ fi
 #VERIFICA ARCHIVOS TENGAN CANTIDAD DE SEPARADORES DE FORMATO
 
 function VerificarFormato(){
-	
-if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[0-9]\{1,\}_[^_]*$' &>/dev/null)
 
+local separadores=''
+local numero=''
+local fecha=''	
+	
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_[^_]*$' &>/dev/null)
+ then
+	separadores='N° de Campos' 	
+fi
+	
+if !(echo ${1##*/} | grep '^[^_]*[_][^_]*[_][^_]*[_][0-9]\{1,\}[_][^_]*$' &>/dev/null)
+ then
+	numero=' N°de Archivo'
+fi
+	
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9][0-9][0-9]\)$' &>/dev/null)
+ then
+	fecha=' Fecha dd-mm-aaaa'
+fi	
+
+local salida=$separadores$numero$fecha
+logInfo "$salida"
+
+
+if !( $separadores='' && $numero='' && $fecha='' )
 	then 
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto"
+		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto : ${salida# }"
 		return 1
 	else
 		return 0
@@ -136,7 +158,6 @@ local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\([0-3][0-
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
 local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\);\(.*\)-\4\3\2-g'`
 local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
-logInfo "fecha hasta: $codgestion"
 
 if [ $fecha_hasta = "NULL" ]
 	then
@@ -145,10 +166,6 @@ if [ $fecha_hasta = "NULL" ]
 	else
 	    fecha_hasta=`grep "^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`
 fi
-
-logInfo "$fecha_file"
-logInfo "$fecha_desde"
-logInfo "$fecha_hasta"
 
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
