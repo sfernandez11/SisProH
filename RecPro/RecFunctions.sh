@@ -67,33 +67,30 @@ fi
 
 function VerificarFormato(){
 
-local separadores=''
-local numero=''
-local fecha=''	
+local separadores=""
+local numero=""
+local fecha=""	
 	
 if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_[^_]*$' &>/dev/null)
  then
-	separadores='N° de Campos' 	
+	separadores="N° de Campos" 	
 fi
 	
 if !(echo ${1##*/} | grep '^[^_]*[_][^_]*[_][^_]*[_][0-9]\{1,\}[_][^_]*$' &>/dev/null)
  then
-	numero=' N°de Archivo'
+	numero=" N°de Archivo"
 fi
 	
 if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9][0-9][0-9]\)$' &>/dev/null)
  then
-	fecha=' Fecha dd-mm-aaaa'
+	fecha=" Fecha dd-mm-aaaa"
 fi	
 
-local salida=$separadores$numero$fecha
-logInfo "$salida"
+logInfo "$separadores"
 
-
-if !( $separadores='' && $numero='' && $fecha='' )
-	then 
+if [ ! "$separadores" == "" ] && [ ! "$numero" == "" ] && [ ! "$fecha" == "" ]; then 
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto : ${salida# }"
+		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto :$separadores $numero $fecha"
 		return 1
 	else
 		return 0
