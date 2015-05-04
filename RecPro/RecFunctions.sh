@@ -86,14 +86,16 @@ if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_\([0-9][0-9]\)-\([0-9][0-9]\
 	fecha=" Fecha dd-mm-aaaa"
 fi	
 
-logInfo "$separadores"
+logInfo "$fecha"
 
-if [ ! "$separadores" == "" ] && [ ! "$numero" == "" ] && [ ! "$fecha" == "" ]; then 
+if [ -z "$separadores" ] && [ -z "$numero" ] && [ -z "$fecha" ]; then 
+
+		return 0
+	else
 		rechazarArchivo $1
 		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto :$separadores $numero $fecha"
 		return 1
-	else
-		return 0
+
 fi
 }
 		
