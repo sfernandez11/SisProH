@@ -236,11 +236,11 @@ sub applyEmisorFilter {
 sub sortResults {
 	my $self = shift;
 	my $keyWord = shift;
-	my @fileList = shift;
+	my $fileList = shift;
 	if (defined $keyWord and chomp($keyWord) ne '') {
-		return $self->sortResultsByDate(\@fileList);
+		return $self->sortResultsByDate($fileList);
 	} else {
-		return $self->sortResultsByWeigth(\@fileList, $keyWord);
+		return $self->sortResultsByWeigth($fileList, $keyWord);
 	}
 }
 
@@ -249,24 +249,30 @@ sub sortResultsByWeigth {
 
 sub sortResultsByDate {
 	my $self = shift;
-	my @filesList = shift;
-	foreach my $i (0..$#filesList) {
-		foreach my $j ($i+1 .. $#filesList) {
-			if ($self->formatDate($filesList[$i]->{fecha_norma}) > $self->formatDate($filesList[$j]->{fecha_norma})) {
-				$self->swapFiles(\@filesList, $i, $j);
-			}
-		}
-	}
-	return @filesList;
+	my $filesList = shift;
+	print Dumper $fileList;
+	#print "tengo: $#@{$fileList}";
+	# foreach my $i (0..$#filesList) {
+	# 	foreach my $j ($i+1 .. $#filesList) {
+	# 			print formatDate($filesList[$i]->{fecha_norma});
+	# 		if ($self->formatDate($filesList[$i]->{fecha_norma}) > $self->formatDate($filesList[$j]->{fecha_norma})) {
+	# 			$self->swapFiles(\@filesList, $i, $j);
+	# 		}
+	# 	}
+	# }
+	#return @filesList;
 }
 
 sub formatDate {
+	my $self = shift;
 	my $date = shift;
+	print $date;
 	my $splittedDate = split $date, '-';
 	return join '', reverse $splittedDate;
 }
 
 sub swapFiles {
+	print "entre aca :D";
 	my %aux = ();
 	%aux = $_[0][$_[1]];
 	$_[0][$_[1]] = $_[0][$_[2]];
@@ -279,7 +285,6 @@ sub printResults {
 	my $i = 1;
 	#print Dumper @fileList;
 	foreach (@{$fileList}) {
-		print Dumper $_;
 		 print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} peso \n
 		 	\t $_->{'causante'} \n
 		 	\t $_->{'extracto'} \n\n";
