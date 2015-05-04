@@ -3,40 +3,50 @@
 use warnings;
 use Switch;
 use Data::Dumper;
+use Getopt::Std;
 
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
 	die "InfPro necesita, al menos, un argumento. Ejecute 'InfPro.pl -a' para ver informacion al respecto";
 }
-
-$keyword = $ARGV[1];
+my %options = ();
+foreach (@ARGV) {
+	$options{"c"} = 1 if ($_=~m/^-c/);
+	$options{"a"} = 1 if ($_=~m/^-a/);
+	$options{"e"} = 1 if ($_=~m/^-e/);
+	$options{"i"} = 1 if ($_=~m/^-i/);
+	$options{"g"} = 1 if ($_=~m/^-g/);
+	$options{"keyword"} = $_ if ($_!~m/^-[caeig]/);
+}
+$keyword = $options{"keyword"};
 @fileList = ();
 %filters = ();
-$filters{tNorma}->{code}	= \&{applyTNormaFilter};
+$filters{tNorma}->{code}	= \&applyTNormaFilter;
 $filters{tNorma}->{desc}	= "\n \tFiltro por tipo de norma: escriba el tipo de norma y presione enter, o solo presione enter si no desea aplicar este filtro.\n";
 $filters{tNorma}->{param}	= undef; #to show this is expected eventually
-$filters{anio}->{code}	=  \&{applyAnioFilter};
+$filters{anio}->{code}	=  \&applyAnioFilter;
 $filters{anio}->{desc}	= "\n \t- Filtro por año: Ingrese un rango de años de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
 $filters{anio}->{param}	= undef; 
-$filters{nNorma}->{code} 	= \&{applyNNormaFilter};
+$filters{nNorma}->{code} 	= \&applyNNormaFilter;
 $filters{nNorma}->{desc} 	= "\n \t- Filtro por numero de norma: Ingrese un rango de numeros de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
 $filters{nNorma}->{param}	= undef;
-$filters{gestion}->{code}	= \&{applyGestionFilter};
+$filters{gestion}->{code}	= \&applyGestionFilter;
 $filters{gestion}->{desc}	= "\n \t- Filtro por gestion: Ingrese el nombre de una gestion, o presione enter si no desea aplicar este filtro.\n";
 $filters{gestion}->{param}= undef; 
-$filters{emisor}->{code} 	= \&{applyEmisorFilter};
+$filters{emisor}->{code} 	= \&applyEmisorFilter;
 $filters{emisor}->{desc} 	= "\n \t- Filtro por emisor: Ingrese el nombre de un emisor, o presione enter si no desea aplicar este filtro.\n";
 $filters{emisor}->{param} = undef;
 
+if ($options{"c"}) {
+	&doConsulta;
+} elsif ($options{"a"}) {
 
-switch ($ARGV[0]) {
-	case 'a' {}
-	case 'c' {
-		&doConsulta;
-	}
-	case 'i' {}
-	case 'e' {}
+} elsif ($options{"i"}) {
+	
+} elsif ($options{"e"}) {
+	
 }
+
 
 
 sub doConsulta {
@@ -72,9 +82,10 @@ sub doConsulta {
 			}
 		}
 	}
-	@fileList = &applyFilters();
-	&sortResults('');
+	&applyFilters();
+	&sortResults();
 	&printResults();
+	&saveQuery();
 }
 
 sub showQueryMenu {
@@ -82,13 +93,14 @@ sub showQueryMenu {
     foreach my $filter ( keys %filters  ) {
     	print $filters{ $filter }->{desc} . "\n"; #printing description
     	my $aux = <STDIN>;
-    	$filters{ $filter }->{param} = chomp($aux);
+    	chomp($aux);
+    	$filters{ $filter }->{param} = $aux;
 	}
 }
 
 sub isEmptyFilter {
 	foreach my $filter ( keys %filters  ) {
-	    if (chomp(${filters}{$filter}->{param}) ne '') {
+	    if (${filters}{$filter}->{param} ne '') {
 	    	return 0;
 	    }
 	}
@@ -103,6 +115,7 @@ sub parseDoc {
 	open(FILE, "$file") or return 0;
 	while (my $line = <FILE>) {
 		my @splittedLine = split(';', $line);
+		chomp($splittedLine[13]);
 		my %fileParsed = (
 			'fuente' => $splittedLine[0],
 			'fecha_norma' => $splittedLine[1],
@@ -118,59 +131,39 @@ sub parseDoc {
 			'cod_gestion' => $splittedLine[11],
 			'cod_norma' => $splittedLine[12],
 			'cod_emisor' => $splittedLine[13],
+			'peso' => 0,
 		);
 		push @fileList, \%fileParsed;
 	}
 }
 
 sub applyFilters {
-	# my $self = shift;
-	# my @fileList = shift;
-	# my @filters = keys($self->{filters});
-	# for my $filter (@filters) {
-	# 	print Dumper $filter;
-	# 	if ($filter eq 'tNorma') {@fileList = $self->applyTNormaFilter($filter, \@fileList);}
-	# 	elsif ($filter eq 'año') {@fileList = $self->applyAnioFilter($filter, \@fileList);}
-	# 	elsif ($filter eq 'nNorma') {@fileList = $self->applyNNormaFilter($filter, \@fileList);}
-	# 	elsif ($filter eq 'gestion') {@fileList = $self->applyGestionFilter($filter, \@fileList);}
-	# 	elsif ($filter eq 'emisor') {@fileList = $self->applyEmisorFilter($filter, \@fileList);}
-	# }
-	# return @filters;
-    
 	for my $filter ( keys(%filters) )  {
-		print "Voy a aplicar el filtro $filter en la lista de archivos con el parametro: (" 
-      		.  $filters{ $filter }->{param} . ")\n"; 
-            
         my $coderef = $filters{ $filter }->{code}; #code reference
-        print Dumper $filters{ $filter }->{code};
-        chomp($filters{ $filter }->{param});
-        print Dumper $filters{ $filter }->{param} . "elooo";
-        &$coderef->( $filters{ $filter }->{param} ); #calling the code ref
-       # &$coderef->();
+        $coderef->( $filters{ $filter }->{param} ); #calling the code ref
 	}
 }
 
 sub applyTNormaFilter {
-	print "aplicando filtro tnorma :D";
 	my $filter = shift;
-	if (not defined $filter) {
+	if (not defined $filter or $filter eq '') {
 		return;
 	}
 	foreach my $i (0 .. $#fileList) {
-		if ($self->{fileList}[$i]{cod_norma} ne $filter) {
-			splice($self->{fileList}, $i, 1);
+		if ($fileList[$i]{cod_norma} ne $filter) {
+			splice(@fileList, $i, 1);
 		}
 	}
 }
 
 sub applyAnioFilter {
 	my $filter = shift;
-	if (not defined $filter) {
+	if (not defined $filter or $filter eq '') {
 		return;
 	}
 	my @filterSplitted = split('-', $filter);
 	foreach my $i (0 .. $#fileList) {
-		if ($fileList[$i]{anio_norma} < $filterSplitted[0] || $fileList[$i]{anio_norma} > $filterSplitted[1]) {
+		if ($fileList[$i]{anio_norma} <= $filterSplitted[0] || $fileList[$i]{anio_norma} >= $filterSplitted[1]) {
 			splice(@fileList, $i, 1); 
 		}
 	}
@@ -178,7 +171,7 @@ sub applyAnioFilter {
 
 sub applyNNormaFilter {
 	my $filter = shift;
-	if (not defined $filter) {
+	if (not defined $filter or $filter eq '') {
 		return;
 	}
 	my @filterSplitted = split('-', $filter);
@@ -191,7 +184,7 @@ sub applyNNormaFilter {
 
 sub applyGestionFilter {
 	my $filter = shift;
-	if (not defined $filter) {
+	if (not defined $filter or $filter eq '') {
 		return;
 	}
 	foreach my $i (0 .. $#fileList) {
@@ -203,7 +196,7 @@ sub applyGestionFilter {
 
 sub applyEmisorFilter {
 	my $filter = shift;
-	if (not defined $filter) {
+	if (not defined $filter or $filter eq '') {
 		return;
 	}
 	foreach my $i (0 .. $#fileList) {
@@ -214,15 +207,34 @@ sub applyEmisorFilter {
 }
 
 sub sortResults {
-	my $keyWord = shift;
-	if (defined $keyWord and chomp($keyWord) ne '') {
+	if (not defined $keyword or $keyword eq '') {
 		return &sortResultsByDate();
 	} else {
-		return &sortResultsByWeigth($keyWord);
+		return &sortResultsByWeigth();
 	}
 }
 
 sub sortResultsByWeigth {
+	my $arrayLength = scalar (@fileList);
+	foreach my $i (0..$arrayLength) {
+		my $causante = $fileList[$i]->{causante};
+		my $causanteCount = () = $causante =~ /$keyword/g;
+		my $extracto = $fileList[$i]->{extracto};
+		my $extractoCount = () = $extracto =~ /$keyword/g;
+		$fileList[$i]->{peso} = $causanteCount * 10 + $extractoCount;
+	}
+	foreach my $i (0..$arrayLength-2) {
+		foreach my $j ($i+1 .. $arrayLength-1) {
+			if ($fileList[$i]->{peso} < $fileList[$j]->{peso}) {
+				&swapFiles( $i, $j);
+			} elsif ($fileList[$i]->{peso} == $fileList[$j]->{peso}) {
+				if (&formatDate($fileList[$i]->{fecha_norma}) > &formatDate($fileList[$j]->{fecha_norma})) {
+					&swapFiles( $i, $j);
+				}
+			}
+		}
+	}
+
 }
 
 sub sortResultsByDate {
@@ -252,9 +264,25 @@ sub swapFiles {
 sub printResults {
 	my $i = 1;
 	foreach (@fileList) {
-		 print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} peso \n
+		 print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'peso'} \n
 		 	\t $_->{'causante'} \n
 		 	\t $_->{'extracto'} \n\n";
 		 $i++;
 	}
+}
+
+sub saveQuery {
+	print "SALVANDO EL DOC";
+	my $INFODIR = "INFODIR";
+	opendir(DIR, $INFODIR);
+	@files = grep(/^resultado_/,readdir(DIR));
+	closedir(DIR);
+	my $counter = sprintf("%03d", $#files +1);
+	my $filename = $INFODIR . '/resultado_' . $counter;
+	open(my $fh, '>', $filename) or die "Could not open file '$filename' $!";
+	foreach (@fileList) {
+		 print $fh "$_->{'cod_norma'} $_->{'emisor'} $_->{'cod_emisor'} $_->{'nro_norma'} $_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'causante'} $_->{'extracto'} $_->{'idRegistro'}\n";
+	}
+	close $fh;
+	print "Salida guardada en $INFODIR/resultado_$counter";
 }
