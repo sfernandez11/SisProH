@@ -169,16 +169,23 @@ fi
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion"
+    local hoy=`date +%Y%m%d`
+    if [ $hoy -lt $fecha_file ]
+    then
+      logInfo "Rechazado ${1##*/} - La fecha de novedad para gestion $codgestion debe ser anterior a hoy"
+    else
+      logInfo "Rechazado ${1##*/} - Fecha no corresponde a Gestion"
+    fi
 		return 1
 	else
-		return 0
+    return 0
+    
 fi
 }	
 	  
 function verificar_FECHA(){
 	
-if [ $2 \< $1 ]	&& [ $1 \< $3 ]
+if [ $2 -le $1 -a $1 -le $3 ]
  then
 	return 0
  else
