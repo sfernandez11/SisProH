@@ -55,6 +55,8 @@ do
 			writeRecordOutput $PROCDIR/$gest/$doc.temporal $DOCTYPE
 			$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
 			rm  $PROCDIR/$gest/$doc.temporal
+			$BINDIR/glog.sh "ProPro" "Muevo el archivo procesado a la carpeta proc"
+			$BINDIR/mover.sh $PROCDIR/$gest/$doc $PROCDIR/proc "ProPro"
 		fi
 	done
 done
