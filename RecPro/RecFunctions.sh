@@ -86,8 +86,6 @@ if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_\([0-9][0-9]\)-\([0-9][0-9]\
 	fecha=" Fecha dd-mm-aaaa"
 fi	
 
-logInfo "$fecha"
-
 if [ -z "$separadores" ] && [ -z "$numero" ] && [ -z "$fecha" ]; then 
 
 		return 0
