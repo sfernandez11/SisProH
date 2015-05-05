@@ -95,8 +95,9 @@ else
 
 	fi
 
-	#Si no esta repetido el archivo en el directorio destino muevo el archivo.
+	#Finalmente muevo el archivo al destino indicado.
 	mv "$ORIGEN" "$DESTINO"
+	$BINDIR/glog.sh "$COMANDO" "Se movio el archivo: $NOMBRE_ARCHIVO al destino: $DESTINO exitosamente" "INFO"
 	
 	exit 0
 
