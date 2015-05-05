@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #use strict;
 use warnings;
-use Switch;
+#use Switch;
 use Data::Dumper;
 use Time::Piece;
 use Env;
@@ -25,6 +25,7 @@ foreach (@ARGV) {
 
 $keyword = $options{"keyword"};
 @fileList = ();
+%estadisticaFileList = ();
 %filters = ();
 
 #------ Lanzo la opcion que corresponda ------
@@ -35,7 +36,7 @@ if ($options{"c"}) {
 } elsif ($options{"i"}) {
 	&doInforme();
 } elsif ($options{"e"}) {
-	
+	&doEstadistica();
 }
 
 #-------- Funciones de consulta ---------
@@ -77,7 +78,7 @@ sub doConsulta {
 	&applyFilters();
 	&sortResults();
 	&printResults();
-	&saveQuery();
+	&saveQuery() if ($options{'g'});
 }
 
 sub initConsulta {
@@ -235,14 +236,15 @@ sub doEstadistica {
 				if ($_ eq '.' or $_ eq '..') {
 					next;
 				}
-				my @file_contents = &parseDoc("$dir/$_");
+				my @file_contents = &parseDocEstadistica("$dir/$_");
 			}
 		}
 	}
+	&joinEstadisticas();
 	&applyFilters();
 	&sortResultsByDate();
 	&printResultsEstadisticas();
-	&saveQueryEstadisticas();
+	#&saveQueryEstadisticas();
 }
 
 sub initEstadistica {
@@ -258,15 +260,73 @@ sub initEstadistica {
 	$filters{gestion}->{errorMsg}= "La gestion ingresada no es valida. Por favor, ingrese una gestion valida.\n";
 }
 
+sub parseDocEstadistica {
+	my $file = shift;
+	open(FILE, "$file") or return 0;
+	my %procesedFile = ();
+	$procesedFile{'cod_gestion'} = '';
+	$procesedFile{'anio_norma'} = '';
+	$procesedFile{'convenios'} = 0;
+	$procesedFile{'resoluciones'} = 0;
+	$procesedFile{'disposiciones'} = 0;
+	$procesedFile{'fecha_norma'} = '';
+	@emisores = ();
+
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		if (!length $procesedFile{'cod_gestion'}) {
+			$procesedFile{'cod_gestion'} = $splittedLine[11];
+		}
+		if ($procesedFile{'anio_norma'} eq '') {
+			$procesedFile{'anio_norma'} = $splittedLine[3];
+		}
+		if ($procesedFile{'fecha_norma'} eq '') {
+			$procesedFile{'fecha_norma'} = $splittedLine[1];
+		}
+		$procesedFile{'convenios'}++ if ($splittedLine[12] eq 'CON');
+		$procesedFile{'resoluciones'}++ if ($splittedLine[12] eq 'RES');
+		$procesedFile{'disposiciones'}++ if ($splittedLine[12] eq 'DIS');
+		chomp($splittedLine[13]);
+		my $found = 0;
+		foreach my $emisor (@emisores) {
+			if ( $emisor eq $splittedLine[13] ) {
+				$found = 1;
+				last;
+			}
+		}
+		push(@emisores, $splittedLine[13]) if (!$found);
+	}
+	@{$procesedFile{'emisores'}} = @emisores;
+	push @fileList, \%procesedFile;
+}
+
 sub printResultsEstadisticas {
 	my $i = 1;
 	foreach (@fileList) {
-		#TODO: Corregir los datos que muestra...
-		print "$i) Gestion: $_->{'cod_gestion'} Año: $_->{'anio_norma'} Emisores: ";
-		 # print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'peso'} \n
-		 # 	\t $_->{'causante'} \n
-		 # 	\t $_->{'extracto'} \n\n";
-		 $i++;
+		my @emisoresList = $_->{'emisores'};
+		my $emisores = join(', ', @emisoresList);
+		print Dumper $emisores;
+		print "$i) Gestion: $_->{'cod_gestion'} Año: $_->{'anio_norma'} Emisores: $emisores \n";
+		print "\tCantidad de resoluciones: $_->{'resoluciones'} \n";
+		print "\tCantidad de disposiciones: $_->{'disposiciones'} \n";
+		print "\tCantidad de convenios: $_->{'convenios'} \n";
+		$i++;
+	}
+}
+
+sub joinEstadisticas {
+	foreach my $file (@fileList) {
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'cod_gestion'} = $file->{'cod_gestion'};
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'anio_norma'} = $file->{'anio_norma'};
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'fecha_norma'} = $file->{'fecha_norma'};
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'emisores'} = $file->{'emisores'}; #TODO: Hacer un buen merge...
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'convenios'} += $file->{'convenios'};
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'resoluciones'} += $file->{'resoluciones'};
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'disposiciones'} += $file->{'disposiciones'};
+	}
+	@fileList = ();
+	foreach my $key (keys %estadisticaFileList) {
+	   push @fileList, $estadisticaFileList{$key};
 	}
 }
 
