@@ -3,45 +3,56 @@ source ProProAuxFunctions.sh
 source ProProFunctions.sh
 
 $BINDIR/glog.sh "ProPro" "Inicio de ProPro"
-cantFile=`ls 'ACEPDIR/' | wc -l`
-$BINDIR/glog.sh "ProPro" "Cantidad de archivos a procesar: $cantFile"
-gestiones=$(cat $MAEDIR/gestiones.mae | sed  's/\([^;]*\);\(.*\)/\1/') 
+cantDir=`ls $ACEPDIR | wc -l`
+cantArchivos=`find $ACEPDIR -type f -exec ls -l {} \; | wc -l`
+$BINDIR/glog.sh "ProPro" "Cantidad de archivos a procesar: $cantArchivos"
+archivosProcesados=0
+archivosRechazados=0
+#$BINDIR/glog.sh "ProPro" "Cantidad de carpetas a analizar para procesar: $cantDir"
+gestiones=$(cat $MAEDIR/gestiones.mae | sed 's-\([^;]*\);\([^/]*\)/\([^/]*\)/\([^;]*\);\(.*\)-\1;\4\3\2;\5-' |  sort -t";" -nk2 | sed 's/\([^;]*\);\(.*\)/\1/')
 for gest in $gestiones
 do
-	docs=$(ls $ACEPDIR | grep $gest | sort -t _ -k 4)
+	if [ -z $ACEPDIR/$gest ]
+	then
+		$BINDIR/glog.sh "ProPro" "No se encontro nada para la gestion: $gest, se sigue."
+		continue
+	fi
+	dir=$ACEPDIR/"$gest"
+	hayArchivos=`ls $dir | wc -l`
+	if [ $hayArchivos -eq 0 ]
+	then
+		$BINDIR/glog.sh "ProPro" "No hay archivos para procesar para la gestion: $gest, se sigue."
+		continue
+	fi
+	#$BINDIR/glog.sh "ProPro" "Archivos a procesar de $gest: $hayArchivos"
+	docs=$(ls $dir | sort -t"_" -k5)
 	for doc in $docs
 	do
-		$BINDIR/glog.sh "ProPro" "Archivo a procesar: $doc"
-		if [ -a $PROCDIR/$gest/$doc ]
+		if [ -a $PROCDIR/proc/$doc ]
 		then
-			$BINDIR/glog.sh "ProPro" "Se rechaza el archivo por estar duplicado."
-			$BINDIR/mover.sh  $ACEPDIR/$doc $RECHDIR "ProPro" 
+			$BINDIR/glog.sh "ProPro" "Se rechaza el archivo $doc por estar duplicado."
+			archivosRechazados=$(( archivosRechazados + 1 ))
+			$BINDIR/mover.sh  $dir/$doc $RECHDIR "ProPro" 
 		else
-			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`
+			normaEmisor=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\2;\3/'`	
 			hasNorma=`cat $MAEDIR/tab/nxe.tab | grep $normaEmisor`
 			if [ -z $hasNorma ]
 			then
-				if [ -a $PROCDIR/$gest ]
-				then
-					$BINDIR/mover.sh $ACEPDIR/$doc $PROCDIR/$gest/$doc "ProPro"
-					echo '1'
-				else
-					echo '2'
-					mkdir $PROCDIR/$gest
-					$BINDIR/mover.sh $ACEPDIR/$doc $PROCDIR/$gest/$doc "ProPro"
-				fi
-			else
 				$BINDIR/glog.sh "ProPro" "Se rechaza el archivo. Emisor no habilitado en este tipo de norma."
-				$BINDIR/mover.sh $ACEPDIR/$doc $RECHDIR "ProPro"
+				archivosRechazados=$(( archivosRechazados + 1 ))
+				$BINDIR/mover.sh $dir/$doc $RECHDIR "ProPro"
 				continue
 			fi
-			$BINDIR/glog.sh "ProPro" "Genero archivo temporal sin lineas vacias, y lo paso para procesar los registros."
-			sed '/^$' $ACEPDIR/$gest/$doc > $ACEPDIR/$gest/$doc.temporal
-			DOCTYPE= getDocType $doc
-			writeRecordOutput $ACEPDIR/$gest/$doc.temporal $DOCTYPE
-			$BINDIR/glog.sh "ProPro" "Elimino el archivo temporal sin lineas vacias que use para procesar."
-			rm  $ACEPDIR/$gest/$doc.temporal
+			DOCTYPE=$(getDocType $doc)
+			archivosProcesados=$(( archivosProcesados + 1 ))
+			writeRecordOutput $dir/$doc $DOCTYPE $doc
+			$BINDIR/glog.sh "ProPro" "Muevo el archivo procesado a la carpeta proc"
+			$BINDIR/mover.sh $dir/$doc $PROCDIR/proc "ProPro"
+			continue
 		fi
 	done
 done
+$BINDIR/glog.sh "ProPro" "Archivos teoricamente a procesar: $cantArchivos."
+$BINDIR/glog.sh "ProPro" "Archivos rechazados: $archivosRechazados."
+$BINDIR/glog.sh "ProPro" "Archivos procesados: $archivosProcesados."
 

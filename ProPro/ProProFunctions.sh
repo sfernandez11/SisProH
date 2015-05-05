@@ -1,26 +1,22 @@
 #!/bin/bash
+source commonFunctions.sh
 
 #Funcion que se encarga de armar los registros de salida para los registros históricos, corrientes
 # y rechazados.
 
-#recibe por parametros: 
+# recibe por parametros: 
 # $1 archivo de input
 # $2 tipo de archivo siendo "HIST" archivos historicos, "CORR" archivos corrientes
+# $3 el doc
 
 function writeRecordOutput() {
-	local i=0
-	while read line
+	while read line || [[ -n "$line" ]]
 	do
-		if [ $i -eq 0  ]
-		then
-			i=$(( i + 1))
-			continue
-		fi
 		local registroRechazado=''
 		local motivoRechazo=''
 		local fechaNorma=`echo $line | sed 's/^\([^;]*\);\(.*\)/\1/'`
 		#codigo de gestion para cuando guardo los archivos
-		codigoGestion=`echo $1 | cut -d "_" -f1`
+		codigoGestion=`echo $3 | cut -d "_" -f1`
 		#obtengo el anio en curso para distintos chequeos.
 		anioEnCurso=`date +%Y`
 		if FECHA_NORMA_VALIDA=$(chequearFechaValida $fechaNorma $anioEnCurso)
@@ -36,14 +32,14 @@ function writeRecordOutput() {
 		fi
 		local anioNorma=`echo $fechaNorma | cut -d "/" -f3`
 		local datosRestantesRegistro=`echo $line | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\3;\4;\5;\6;\7;\8;\9/'`
-		local datosFinalRegistro=`echo $1 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
-		local codigoNorma=`echo $1 | cut -d "_" -f2`
+		local datosFinalRegistro=`echo $3 | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)/\1;\2;\3/'`
+		local codigoNorma=`echo $3 | cut -d "_" -f2`
 		numeroNorma=0		
-			
+	
 		if [ $2 = "HIST" ]
 		then
 			numeroNorma=`echo $line | cut -d ";" -f2`
-			if [ -n $numeroNorma ] 
+			if ! ENTERO=$(isInteger $numeroNorma) 
 			then
 				$BINDIR/glog.sh "ProPro" "Numero de norma no es un numero, se procede a convertir en 0 que es numero de norma invalida"
 				numeroNorma=0
@@ -55,7 +51,7 @@ function writeRecordOutput() {
 			fi
 		elif [ "$2" = "CORR" ]
 		then
-			local codigoEmisor=`echo $1 | cut -d "_" -f3`
+			local codigoEmisor=`echo $3 | cut -d "_" -f3`
 			local codigoFirma=`echo $datosRestantesRegistro | sed 's/^\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\([^;]*\);\(.*\)/\6/'`
 			if ! CODIGO_DE_FIRMA_VALIDO=$(chequearCodigoFirmaValido $codigoEmisor $codigoFirma)
 			then
@@ -67,16 +63,18 @@ function writeRecordOutput() {
 		fi
 		if [ -z $registroRechazado ]
 		then
-			local registroGuardar="$1;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
+			local registroGuardar="$3;$fechaNorma;$numeroNorma;$anioNorma;$datosRestantesRegistro;$datosFinalRegistro"		
 			$(chequearOCreaSubdirectorio $PROCDIR $codigoGestion)						
 			echo "$registroGuardar" >> $PROCDIR/$codigoGestion/$anioNorma.$codigoNorma
-			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma" 		
+			$BINDIR/glog.sh "ProPro" "Se guardo el registro $registroGuardar en el directorio $codigoGestion con el nombre $anioNorma.$codigoNorma"
+			continue 		
 		else
-			echo "$1;"$motivoRechazo";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
-			$BINDIR/glog.sh "ProPro" "Se guardo el registro $1;$motivoRechazo;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
+			echo "$3;"$motivoRechazo";$fechaNorma;$numeroNorma;$datosRestantesRegistro" >> $PROCDIR/$codigoGestion.rech
+			$BINDIR/glog.sh "ProPro" "Se guardo el registro $3;$motivoRechazo;$fechaNorma;$numeroNorma;$datosRestantesRegistro con el nombre $codigoGestion.rech"
+			continue
 		fi
 	done < "$1"
-	$BINDIR/glog.sh "ProPro" "Se termino de procesar el archivo $1"
+	$BINDIR/glog.sh "ProPro" "Se termino de procesar el archivo $3"
 return 0
 
 }
@@ -85,11 +83,12 @@ return 0
 #En caso de no existir, la crea e inicializa.
 #Parametros $1 codigoGestion $2 anioEnCurso $3 codigoEmisor $4 codigoNorma
 function obtenerNumeroNormaCorriente () {
-	$BINDIR/glog.sh "ProPro" "Entrando a obtener el numero de la norma de la tabla axg.tab"
+	#$BINDIR/glog.sh "ProPro" "Entrando a obtener el numero de la norma de la tabla axg.tab"
 	local archivo=$MAEDIR/tab/axg.tab
 	#Me creo un archivo temporal para mover el original y trabajar con el temporal y luego de modificarlo, renombrar.
-	$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
-	cp $archivo $MAEDIR/tab/axg.tabtemp
+	#$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
+	#cp $archivo $MAEDIR/tab/axg.tabtemp
+	sed -e '$a\' $archivo >> $MAEDIR/tab/axg.tabtemp
 	archivoTemp=$MAEDIR/tab/axg.tabtemp
 	$(chequearOCreaSubdirectorio $MAEDIR/tab "ant")
 	$BINDIR/mover.sh "$archivo" "$MAEDIR/tab/ant" "ProPro"
@@ -102,7 +101,7 @@ function obtenerNumeroNormaCorriente () {
 		#Agrego al final de la tabla un nuevo contador para el codigo de norma y emisor
 		local cantLineasArchivo=`wc -l $archivoTemp | cut -d " " -f1`
 		local idContadorActual=`awk "NR == $cantLineasArchivo" $archivoTemp | cut -d ";" -f1`
-		(( idContadorActual++ ))
+		idContadorActual=$(( idContadorActual + 1))
 		local usuario=`whoami`
 		fecha=`date +%d/%m/%Y`
 		echo "$idContadorActual;"$1";"$2";"$3";"$4";2;"$usuario";"$fecha"" >> $archivoTemp
@@ -111,7 +110,8 @@ function obtenerNumeroNormaCorriente () {
 		$BINDIR/glog.sh "ProPro" "Se encontro la norma en la tabla, se tomara el numero de norma y se actualizara el valor en la tabla"
 		local numeroLinea=`echo $resultadoGrep | cut -d ":" -f1`
 		numeroNorma=`echo $resultadoGrep | cut -d ";" -f6`
-		$(incrementarNumeroEnTabla $(( numeroNorma + 1)) $numeroLinea)
+		numeroNorma=$(( numeroNorma + 1))
+		$(incrementarNumeroEnTabla $numeroNorma $numeroLinea)
 		$BINDIR/glog.sh "ProPro" "Se incremento el numero de norma en la tabla para el codigo de norma $4 y codigo de emisor $3"
 	fi
 	#Renombro mi archivo temporal de tabla de contadores por su nombre original.
@@ -150,7 +150,7 @@ function chequearOCreaSubdirectorio () {
 #Chequea si la fecha con formato dd/mm/aaaa es una fecha valida. En caso de serlo devuelve 0, sino 1.
 #Recibe en $1 la fecha a analizar y en $2 en anio en curso
 function chequearFechaValida() {
-	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
+	#$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
 	local dia=`echo $1 | cut -d "/" -f1`
 	if [ $dia -lt 1 -o $dia -gt 31 ]
 	then
@@ -172,7 +172,7 @@ function chequearFechaValida() {
 #Chequea si la fecha pasada en parametro $1 esta en el rango de la gestion.
 #En caso de estar devuelve 0, en caso de no, 1.
 function chequearFechaValidaRangoGestion(){
-	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma esta dentro del rango de la gestion"
+	#$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma esta dentro del rango de la gestion"
 	local archivoMaestroGestiones=$MAEDIR/gestiones.mae
 	local resultGrep=`grep "^$codigoGestion;" $archivoMaestroGestiones`	
 	local fechaDesde=`echo $resultGrep | cut -d ";" -f2`
@@ -208,7 +208,7 @@ function chequearFechaValidaRangoGestion(){
 
 #chequea que el $2 codigo de firma sea valido para el $1 codigoEmisor
 function chequearCodigoFirmaValido() {
-	$BINDIR/glog.sh "ProPro" "Chequeando que la firma del emisor sea valida"	
+	#$BINDIR/glog.sh "ProPro" "Chequeando que la firma del emisor sea valida"	
 	local archivoEmisores=$MAEDIR/emisores.mae		
   	local resultaGrep=`grep "^$1;" $archivoEmisores`
 	local firmaDigital=`echo $resultaGrep | cut -d ";" -f3`

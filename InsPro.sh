@@ -17,9 +17,25 @@ source InsFunctions.sh
 
 GRUPO=$PWD/grupo02
 CONFDIR=$GRUPO/conf
+LOGSIZE=400
+export LOGSIZE
+export GRUPO
+export CONFDIR
 
 # TODO: CONFDIR ya deberia existir
-createDirs $CONFDIR
+if mkdir "$PWD/grupo02" 2>/dev/null ;
+then
+if ! createDirWithSubdir "$CONFDIR";
+then
+  echo "Erro al crear $CONFDIR"
+  exit 1
+fi
+else
+  echo "Erro al crear $PWD/grupo02"
+  exit 1
+fi
+
+
 
 # TODO: verificar si ya esta instalado y cosas que faltan instalar
 if [ -f $CONFDIR/InsPro.conf ]
@@ -93,7 +109,7 @@ done
 logInfo "Creando Estructuras de directorio . . ."
 createDirs $NOVEDIR $ACEPDIR $RECHDIR $PROCDIR
 createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
-createDirs "$MAEDIR/tab"
+createDirs "$MAEDIR/tab" "$MAEDIR/tab/ant" "$PROCDIR/proc"
 
 writeConf
 installBinaries

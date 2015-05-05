@@ -1,21 +1,23 @@
 function getDocType() {
-	#doc="Alfonsin_RES_1001_383_23-05-1988"
 	doc=$1
-	DATE=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\([^_]*\)_\([^_]*\)/\5/'`
-	YEAR=`echo $DATE | sed 's/^\([0-9]*-[0-9]*-\)\([0-9]*\)/\2/'`
+	DATE=`echo $doc | sed 's/^\([^_]*\)_\([^_]*\)_\([^_]*\)_\([^_]*\)_\(.*\)$/\5/'`
+	YEAR=`echo $DATE | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 	currentYear=$(date +"%Y")
-	if  (($YEAR < $currentYear)); 
+	if  (($YEAR < $currentYear)) 
 	then
-		echo "HIST";
+		#$BINDIR/glog.sh "ProPro" "El archivo es de un año anterior al actual. Historico."
+		echo "HIST"
 	else
-		currentAdmin=`tail -1 ${PWD}/MAEDIR/gestiones.mae`
+		currentAdmin=`tail -1 $MAEDIR/gestiones.mae`
 		currentAdminName=`echo $currentAdmin | sed 's/^\([^;]*\);\(.*\)/\1/'`
 		docAdmin=`echo $doc | sed 's/^\([^_]*\)_\(.*\)/\1/'`
 		if [ "$currentAdminName" = "$docAdmin" ]
 		then
-			echo "CORR";
+			#$BINDIR/glog.sh "ProPro" "El archivo es corriente."
+			echo "CORR"
 		else
-			echo "HIST";
+			#$BINDIR/glog.sh "ProPro" "El archivo es de este año pero gestion previa a actual. Historico."
+			echo "HIST"
 		fi
 	fi
 }

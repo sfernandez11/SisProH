@@ -21,15 +21,31 @@ function freeSpace(){
   echo $(divide $free_space_bytes 1024)
 }
 
-function logInfo(){
-  echo InsPro $1
-  #echo $1
-  #echo
+function log(){
+	if [ -f glog.sh ]
+  then
+    if [ ! -x glog.sh ]
+    then
+      chmod +x glog.sh
+    fi
+		./glog.sh "InsPro" "$1" "$2" #1= log message, 2= log level
+	fi
 }
 
+function logInfo(){
+	echo "[INFO] $1" 
+	log "$1" "INFO"
+}	
 function logError(){
-  logInfo "$1 ERR"
+	echo "[ERROR] $1"
+	log "$1" "ERR"
 }
+
+function logWar(){
+	echo "[WARNING] $1" 
+	log "$1" "WAR"
+}
+
 
 function setVariable(){
   local vaux
@@ -79,16 +95,7 @@ function createDir() {
 
 function createDirs(){
   # creo una lista de directorios
-  if [ ! -d "$GRUPO" ]; then
-    # controlo que exista el directorio $GRUPO
-    if createDir "$GRUPO";
-    then
-      logInfo "Directorio $GRUPO creado "
-    else
-      logError "Error al crear el directorio base $GRUPO."
-      exit 1
-    fi
-  fi
+
   for var in "$@"
   do
     if [ -d "$var" ]
@@ -203,7 +210,7 @@ function createDirWithSubdir(){
     fi
     if ! $(createDir "$NEWBASE")
     then
-      logError "No se pudo crear directorio $NEWBASE"
+      echo "No se pudo crear directorio $NEWBASE"
       return 1
     fi
   done

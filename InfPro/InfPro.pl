@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use Switch;
-use 'InfProQuery.pm';
+do 'InfProConsulta.pm';
 
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {

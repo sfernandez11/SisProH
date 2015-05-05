@@ -53,7 +53,7 @@ function VerificarTipo(){
 local tipe=`file $1`
 local tipo=`echo $tipe | sed 's/^\(.*\):\(.*\)/\2/g'`	
 
-if !(echo $tipo | grep '.*text$' &>/dev/null) 
+if !(echo $tipo | grep '^.*text.*$' &>/dev/null) 
 	then 
 		rechazarArchivo $1
 		logInfo "Rechazado  ${1##*/}  - Tipo invalido : $tipo"
@@ -66,15 +66,36 @@ fi
 #VERIFICA ARCHIVOS TENGAN CANTIDAD DE SEPARADORES DE FORMATO
 
 function VerificarFormato(){
-	
-if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[1-9]\{1,\}_[^_]*$' &>/dev/null)
 
-	then 
-		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto"
-		return 1
-	else
+local separadores=""
+local numero=""
+local fecha=""	
+	
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_[^_]*$' &>/dev/null)
+ then
+	separadores="N° de Campos" 	
+fi
+	
+if !(echo ${1##*/} | grep '^[^_]*[_][^_]*[_][^_]*[_][0-9]\{1,\}[_][^_]*$' &>/dev/null)
+ then
+	numero=" N°de Archivo"
+fi
+	
+if !(echo ${1##*/} | grep '^[^_]*_[^_]*_[^_]*_[^_]*_\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9][0-9][0-9]\)$' &>/dev/null)
+ then
+	fecha=" Fecha dd-mm-aaaa"
+fi	
+
+logInfo "$fecha"
+
+if [ -z "$separadores" ] && [ -z "$numero" ] && [ -z "$fecha" ]; then 
+
 		return 0
+	else
+		rechazarArchivo $1
+		logInfo "Rechazado ${1##*/} - Formato de Nombre incorrecto :$separadores $numero $fecha"
+		return 1
+
 fi
 }
 		
@@ -135,27 +156,36 @@ function verificar_FECHA_GESTION(){
 local fecha_file=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\([0-3][0-9]\)[^_]\([0-1][0-9]\)[^_]\([1-2][0-9][0-9][0-9]\)/\7\6\5/g'`
 local codgestion=`echo ${1##*/} | sed 's/^\(.*\)_\(.*\)_\(.*\)_\(.*\)_\(.*\)/\1/g'`		
 local fecha_desde=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\);\(.*\)-\4\3\2-g'`
-local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`	
+local fecha_hasta=`grep	"^$codgestion;.*;.*;.*;" "$2" | sed 's/^\(.*\);\(.*\);\(.*\);\(.*\);\(.*\)/\3/g'`	
 
 if [ $fecha_hasta = "NULL" ]
 	then
 		#Fecha actual
-		local fecha_hasta=`date +%Y%m%d`
+		fecha_hasta=`date +%Y%m%d`
+	else
+	    fecha_hasta=`grep "^$codgestion;.*;.*;.*;" "$2" | sed 's-^\(.*\);\(.*\);\([0-3][0-9]\)/\([0-1][0-9]\)/\([1-2][0-9][0-9][0-9]\);\(.*\);\(.*\)-\5\4\3-g'`
 fi
 
 if !(verificar_FECHA "$fecha_file" "$fecha_desde" "$fecha_hasta");
 	then
 		rechazarArchivo $1
-		logInfo "Rechazado ${1##*/} - Fecha no coresponde a Gestion"
+    local hoy=`date +%Y%m%d`
+    if [ $hoy -lt $fecha_file ]
+    then
+      logInfo "Rechazado ${1##*/} - La fecha de novedad para gestion $codgestion debe ser anterior a hoy"
+    else
+      logInfo "Rechazado ${1##*/} - Fecha no corresponde a Gestion"
+    fi
 		return 1
 	else
-		return 0
+    return 0
+    
 fi
 }	
 	  
 function verificar_FECHA(){
 	
-if [ $2 \< $1 ]	&& [ $1 \< $3 ]
+if [ $2 -le $1 -a $1 -le $3 ]
  then
 	return 0
  else

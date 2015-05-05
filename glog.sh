@@ -11,6 +11,9 @@
 # Ademas, como dice el enunciado, el log tiene el mismo nombre que la funcion/comando que llama a este script
 # con la extension .log y que la ubicacion es LOGDIR o bien CONFDIR si se trata del comando InsPro.
 #------------------------------------------------------------------------------------------------------
+function divide(){
+  echo $((($1 + $2/2) / $2))
+}
 
 WHERE=$1					# Nombre de la funcion o comando que llama al glog.
 WHY=$2						# Texto del mensaje a loguear.
@@ -60,9 +63,12 @@ WHO=$LOGNAME		# Usuario, es el login del usuario.
 echo "$WHEN-$WHO-$WHERE-$WHAT-$WHY" >> $LOGPATH
 
 # Manejo de crecimiento controlado:
-TAMANIO=`stat -c %s $LOGPATH` 				#Comando que indica el tamaño de un archivo. Devuelve el tamaño en bytes.
+TAMANIO_bytes=`stat -c %s $LOGPATH` 		#Comando que indica el tamaño de un archivo. Devuelve el tamaño en bytes.
 
-if [ $TAMANIO -gt $LOGSIZE ]				#Si el tamaño del archivo es mayor que el LOGSIZE
+#Paso de bytes a kb.
+TAMANIO_kb=$(divide $TAMANIO_bytes 1024)
+
+if [ $TAMANIO_kb -gt $LOGSIZE ]				#Si el tamaño del archivo es mayor que el LOGSIZE
 then
 
 	TEMPORAL='templog.log' 					#Creo un archivo temporal para el log nuevo.
