@@ -45,19 +45,22 @@ then
   
 else
   # TODO: CONFDIR ya deberia existir
-  if [ ! -d "$PWD/grupo02" ]
+  if [ ! -d "$PWD/grupo02" ] # REMOVE
+  then # REMOVE
+    mkdir "$PWD/grupo02" 2>/dev/null ; # REMOVE
+    if [ ! $? ] # REMOVE
+    then # REMOVE
+      echo "Erro al crear $PWD/grupo02" # REMOVE
+      exit 1 # REMOVE
+    fi # REMOVE
+  fi # REMOVE
+  if [ ! -d "$CONFDIR" ]
   then
-    mkdir "$PWD/grupo02" 2>/dev/null ;
-    if [ ! $? ]
+    if ! createDirWithSubdir "$CONFDIR";
     then
-      echo "Erro al crear $PWD/grupo02"
+      echo "Error al crear $CONFDIR"
       exit 1
     fi
-  fi
-  if ! createDirWithSubdir "$CONFDIR";
-  then
-    echo "Error al crear $CONFDIR"
-    exit 1
   fi
   initialize
 fi

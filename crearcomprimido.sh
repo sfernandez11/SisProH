@@ -23,11 +23,24 @@ echo el script es $0
 for file in $PWD/*.sh ;
 do
   #echo Arch ${file##*/} script ${0##*/}
+  if [ ${file##*/} == "InsPro.sh" ]
+  then
+    continue
+  fi
   if [ ! ${file##*/} == ${0##*/} ]
   then
     cp "${file##*/}" grupo02
   fi
 done
+
+cp Readme.txt grupo02/Readme.txt
+
+echo
+echo Aplicando patch a InsPro.sh . . . 
+echo
+
+grep -v '# REMOVE$' InsPro.sh | sed 's-GRUPO=$PWD/grupo02-GRUPO=$PWD-' >> grupo02/InsPro.sh
+chmod +x grupo02/InsPro.sh
 
 echo
 echo Comprimiendo . . . 
@@ -41,8 +54,8 @@ echo
 
 rm -r grupo02
 
-echo
-echo Descomprimiendo tar ...  
-echo
+#echo
+#echo Descomprimiendo tar ...  
+#echo
 
-tar -zxf grupo02.tar.gz
+#tar -zxf grupo02.tar.gz
