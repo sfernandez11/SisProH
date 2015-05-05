@@ -49,6 +49,10 @@ else
 	return 1
 fi
 
+logINFO "Exportando variables de ambiente..."
+
+exportEnvVar
+
 logINFO "Verificando la existencia de ejecutables..."
 if checkBinFilesExists; then
 	logINFO "Archivos ejecutables detectados"
@@ -80,12 +84,6 @@ else
 	logERROR "No se pudo setear correctamente los permisos de ejecucion"
 	return 1
 fi
-
-logINFO "Exportando variables de ambiente..."
-
-exportEnvVar
-
-logINFO "Se agrego $BINDIR al PATH. PATH= "$PATH
 
 logINFO "Estado del Sistema: INICIALIZADO"
 
