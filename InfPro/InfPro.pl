@@ -4,7 +4,10 @@ use warnings;
 use Switch;
 use Data::Dumper;
 use Time::Piece;
+use Env;
 
+
+#----- Valido el input -------
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
 	die "InfPro necesita, al menos, un argumento. Ejecute 'InfPro.pl -a' para ver informacion al respecto";
@@ -18,35 +21,13 @@ foreach (@ARGV) {
 	$options{"g"} = 1 if ($_=~m/^-g/);
 	$options{"keyword"} = $_ if ($_!~m/^-[caeig]/);
 }
+#----- Formateo inicial --------
+
 $keyword = $options{"keyword"};
 @fileList = ();
 %filters = ();
-$filters{tNorma}->{code}	= \&applyTNormaFilter;
-$filters{tNorma}->{desc}	= "\n \t- Filtro por tipo de norma: escriba el tipo de norma y presione enter, o solo presione enter si no desea aplicar este filtro.\n";
-$filters{tNorma}->{param}	= undef;
-$filters{tNorma}->{validator}	= \&validateTNorma;
-$filters{tNorma}->{errorMsg}	= "El tipo de norma ingresado no es valido. Ingrese un tipo de norma Valido. \n";
-$filters{anio}->{code}	=  \&applyAnioFilter;
-$filters{anio}->{desc}	= "\n \t- Filtro por año: Ingrese un rango de años de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
-$filters{anio}->{param}	= undef;
-$filters{anio}->{validator}	= \&validateYear;
-$filters{anio}->{errorMsg}	= "El rango de años ingresado no es valido. Por favor, ingrese un rango de años valido.\n";
-$filters{nNorma}->{code} 	= \&applyNNormaFilter;
-$filters{nNorma}->{desc} 	= "\n \t- Filtro por numero de norma: Ingrese un rango de numeros de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
-$filters{nNorma}->{param}	= undef;
-$filters{nNorma}->{validator}	= \&validateNNorma;
-$filters{nNorma}->{errorMsg}	= "El numero de norma ingresado no es valido. Por favor ingrese un numero de norma valido.\n";
-$filters{gestion}->{code}	= \&applyGestionFilter;
-$filters{gestion}->{desc}	= "\n \t- Filtro por gestion: Ingrese el nombre de una gestion, o presione enter si no desea aplicar este filtro.\n";
-$filters{gestion}->{param}= undef;
-$filters{gestion}->{validator}= \&validateGestion;
-$filters{gestion}->{errorMsg}= "La gestion ingresada no es valida. Por favor, ingrese una gestion valida.\n";
-$filters{emisor}->{code} 	= \&applyEmisorFilter;
-$filters{emisor}->{desc} 	= "\n \t- Filtro por emisor: Ingrese el nombre de un emisor, o presione enter si no desea aplicar este filtro.\n";
-$filters{emisor}->{param} = undef;
-$filters{emisor}->{validator} = \&validateEmisor;
-$filters{emisor}->{errorMsg} = "El emisor ingresado no es valido. Por favor, ingreso un emisor valido. \n";
 
+#------ Lanzo la opcion que corresponda ------
 if ($options{"c"}) {
 	&doConsulta;
 } elsif ($options{"a"}) {
@@ -57,19 +38,20 @@ if ($options{"c"}) {
 	
 }
 
-
+#-------- Funciones ---------
 
 sub doConsulta {
+	&initConsulta();
 	do {
 		&showQueryMenu;
 	} until (!&isEmptyFilter);
-	my $procdir = "PROCDIR";
+	my $procdir = $ENV{'PROCDIR'};
 	my @dlist;
 	if (opendir(DIRH,"$procdir")) {
 		@dlist=readdir(DIRH);
 		closedir(DIRH);
 	} else {
-		die("No se pudo abrir el directorio de PROCDIR");
+		die("No se pudo abrir el directorio de $procdir");
 	}
 	foreach (@dlist) {
 		# ignorar . y .. :
@@ -96,6 +78,34 @@ sub doConsulta {
 	&sortResults();
 	&printResults();
 	&saveQuery();
+}
+
+sub initConsulta {
+	$filters{tNorma}->{code}	= \&applyTNormaFilter;
+	$filters{tNorma}->{desc}	= "\n \t- Filtro por tipo de norma: escriba el tipo de norma y presione enter, o solo presione enter si no desea aplicar este filtro.\n";
+	$filters{tNorma}->{param}	= undef;
+	$filters{tNorma}->{validator}	= \&validateTNorma;
+	$filters{tNorma}->{errorMsg}	= "El tipo de norma ingresado no es valido. Ingrese un tipo de norma Valido. \n";
+	$filters{anio}->{code}	=  \&applyAnioFilter;
+	$filters{anio}->{desc}	= "\n \t- Filtro por año: Ingrese un rango de años de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
+	$filters{anio}->{param}	= undef;
+	$filters{anio}->{validator}	= \&validateYear;
+	$filters{anio}->{errorMsg}	= "El rango de años ingresado no es valido. Por favor, ingrese un rango de años valido.\n";
+	$filters{nNorma}->{code} 	= \&applyNNormaFilter;
+	$filters{nNorma}->{desc} 	= "\n \t- Filtro por numero de norma: Ingrese un rango de numeros de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
+	$filters{nNorma}->{param}	= undef;
+	$filters{nNorma}->{validator}	= \&validateNNorma;
+	$filters{nNorma}->{errorMsg}	= "El numero de norma ingresado no es valido. Por favor ingrese un numero de norma valido.\n";
+	$filters{gestion}->{code}	= \&applyGestionFilter;
+	$filters{gestion}->{desc}	= "\n \t- Filtro por gestion: Ingrese el nombre de una gestion, o presione enter si no desea aplicar este filtro.\n";
+	$filters{gestion}->{param}= undef;
+	$filters{gestion}->{validator}= \&validateGestion;
+	$filters{gestion}->{errorMsg}= "La gestion ingresada no es valida. Por favor, ingrese una gestion valida.\n";
+	$filters{emisor}->{code} 	= \&applyEmisorFilter;
+	$filters{emisor}->{desc} 	= "\n \t- Filtro por emisor: Ingrese el nombre de un emisor, o presione enter si no desea aplicar este filtro.\n";
+	$filters{emisor}->{param} = undef;
+	$filters{emisor}->{validator} = \&validateEmisor;
+	$filters{emisor}->{errorMsg} = "El emisor ingresado no es valido. Por favor, ingreso un emisor valido. \n";
 }
 
 sub showQueryMenu {
@@ -189,7 +199,6 @@ sub applyAnioFilter {
 	my @filterSplitted = split('-', $filter);
 	print $fileCount;
 	while ($i < $fileCount) {
-			print Dumper $fileList[$i];
 		if ($fileList[$i]{anio_norma} <= $filterSplitted[0] || $fileList[$i]{anio_norma} >= $filterSplitted[1]) {
 			splice(@fileList, $i, 1);
 			$fileCount = scalar @fileList;
@@ -318,7 +327,7 @@ sub printResults {
 }
 
 sub saveQuery {
-	my $INFODIR = "INFODIR";
+	my $INFODIR = $ENV{"INFODIR"};
 	opendir(DIR, $INFODIR);
 	@files = grep(/^resultado_/,readdir(DIR));
 	closedir(DIR);
