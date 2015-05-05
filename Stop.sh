@@ -31,7 +31,6 @@ if [ ! -f $BINDIR/$1.sh ]; then
     exit 1
 fi
 
-#PID=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}' | head -n 1`
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
@@ -43,8 +42,6 @@ if [ "$PID" != "" ]; then
         echo "Error al detener el demonio con pid $PID"    
     fi
 
-    #PID=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}'`
-    #PID=`ps aux | grep "\($BINDIR\)\?/$1.sh" | grep -v grep | awk '{print $2}' | head -n 1`
     PID=$(getPid $1)
 
     if [ "$PID" != "" ]; then
