@@ -367,9 +367,9 @@ function installBinaries(){
 
 function installTabs(){
   logInfo "Instalando Archivos Maestros y Tablas"
-  cp -a pruebas/*.mae $MAEDIR
-  cp -ar pruebas/*.tab "$MAEDIR/tab"
-  cp -a pruebas/novedades/* $NOVEDIR
+  cp -a Datos/*.mae $MAEDIR
+  cp -ar Datos/*.tab "$MAEDIR/tab"
+  cp -a pruebas/* $NOVEDIR
 }
 
 function unsetVariables(){
