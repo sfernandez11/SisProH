@@ -55,7 +55,7 @@ sub doConsulta {
 	}
 	foreach (@dlist) {
 		# ignorar . y .. :
-		next if ($_ eq "." || $_ eq "..");
+		next if ($_ eq "." || $_ eq ".." || $_ eq "proc");
 		if ( -d "$procdir/$_" ) {
 			my @flist;
 			if (opendir(DIRH, "$procdir/$_")) {
