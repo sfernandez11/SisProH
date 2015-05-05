@@ -29,6 +29,7 @@ sub new {
     $self->{filters}->{emisor}->{code} 	= \&{$self->applyEmisorFilter};
     $self->{filters}->{emisor}->{desc} 	= "\n \t- Filtro por emisor: Ingrese el nombre de un emisor, o presione enter si no desea aplicar este filtro.\n";
     $self->{filters}->{emisor}->{param} = undef;
+    $self->{fileList} = ();
     return $self;
     #return(bless($self, $class));
 }
@@ -46,7 +47,6 @@ sub runQueryMode {
 	} else {
 		die("No se pudo abrir el directorio de PROCDIR");
 	}
-	my @fileList = ();
 	foreach (@dlist) {
 		# ignorar . y .. :
 		next if ($_ eq "." || $_ eq "..");
@@ -65,13 +65,13 @@ sub runQueryMode {
 					next;
 				}
 				my @file_contents = $self->parseDoc("$dir/$_");
-				push(@fileList, @file_contents);
+				push($self->{fileList}, @file_contents);
 			}
 		}
 	}
 	#@fileList = $self->applyFilters(\@fileList);
-	$self->sortResults('', \@fileList);
-	$self->printResults(\@fileList);
+	$self->sortResults('');
+	$self->printResults();
 }
 
 sub showQueryMenu {
@@ -101,7 +101,6 @@ sub isEmptyFilter {
 sub parseDoc {
 	my $self = shift;
 	my $file = shift;
-	my @fileList = ();
 	open(FILE, "$file") or return 0;
 	while (my $line = <FILE>) {
 		my @splittedLine = split(';', $line);
@@ -121,10 +120,8 @@ sub parseDoc {
 			'cod_norma' => $splittedLine[12],
 			'cod_emisor' => $splittedLine[13],
 		);
-		push @fileList, \%fileParsed;
+		push @{$self->{fileList}}, \%fileParsed;
 	}
-
-	return @fileList;
 }
 
 sub applyFilters {
@@ -161,14 +158,13 @@ sub applyTNormaFilter {
 	my $filter = shift;
 	my @fileList = shift;
 	if (not defined $filter) {
-		return @fileList;
+		return;
 	}
 	foreach my $i (0 .. $#fileList) {
-		if ($fileList[$i]{cod_norma} ne $filter) {
-			splice(@fileList, $i, 1);
+		if ($self->{fileList}[$i]{cod_norma} ne $filter) {
+			splice($self->{fileList}, $i, 1);
 		}
 	}
-	return @fileList;
 }
 
 sub applyAnioFilter {
@@ -236,11 +232,10 @@ sub applyEmisorFilter {
 sub sortResults {
 	my $self = shift;
 	my $keyWord = shift;
-	my $fileList = shift;
 	if (defined $keyWord and chomp($keyWord) ne '') {
-		return $self->sortResultsByDate($fileList);
+		return $self->sortResultsByDate();
 	} else {
-		return $self->sortResultsByWeigth($fileList, $keyWord);
+		return $self->sortResultsByWeigth($keyWord);
 	}
 }
 
@@ -249,42 +244,41 @@ sub sortResultsByWeigth {
 
 sub sortResultsByDate {
 	my $self = shift;
-	my $filesList = shift;
-	print Dumper $fileList;
 	#print "tengo: $#@{$fileList}";
-	# foreach my $i (0..$#filesList) {
-	# 	foreach my $j ($i+1 .. $#filesList) {
-	# 			print formatDate($filesList[$i]->{fecha_norma});
-	# 		if ($self->formatDate($filesList[$i]->{fecha_norma}) > $self->formatDate($filesList[$j]->{fecha_norma})) {
-	# 			$self->swapFiles(\@filesList, $i, $j);
-	# 		}
-	# 	}
-	# }
-	#return @filesList;
+	my $arrayLength = scalar (@{$self->{fileList}});
+	foreach my $i (0..$arrayLength - 1) {
+		foreach my $j ($i+1 .. $arrayLength - 1) {
+			#print $self->formatDate(@{$self->{fileList}}[$i]->{fecha_norma});
+			if ($self->formatDate(@{$self->{fileList}}[$i]->{fecha_norma}) > $self->formatDate(@{$self->{fileList}}[$j]->{fecha_norma})) {
+				$self->swapFiles( $i, $j);
+			}
+		}
+	}
 }
 
 sub formatDate {
 	my $self = shift;
 	my $date = shift;
-	print $date;
-	my $splittedDate = split $date, '-';
-	return join '', reverse $splittedDate;
+	#print $date;
+	my @splittedDate = split '/', $date ;
+	my $formattedDate = join '', reverse @splittedDate;
+	return $formattedDate;
 }
 
 sub swapFiles {
-	print "entre aca :D";
-	my %aux = ();
-	%aux = $_[0][$_[1]];
-	$_[0][$_[1]] = $_[0][$_[2]];
-	$_[0][$_[2]] = %aux;
+	my $self = $_[0];
+	my $aux;
+	$aux = @{$self->{fileList}}[$_[1]];
+	@{$self->{fileList}}[$_[0]] = @{$self->{fileList}}[$_[1]];
+	print Dumper @{$self->{fileList}};
+	@{$self->{fileList}}[$_[1]] = %{$aux};
 }
 
 sub printResults {
 	my $self = shift;
-	my $fileList = shift;
 	my $i = 1;
 	#print Dumper @fileList;
-	foreach (@{$fileList}) {
+	foreach (@{$self->{fileList}}) {
 		 print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} peso \n
 		 	\t $_->{'causante'} \n
 		 	\t $_->{'extracto'} \n\n";

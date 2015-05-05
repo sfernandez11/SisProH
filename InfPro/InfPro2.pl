@@ -3,7 +3,7 @@
 use warnings;
 use Switch;
 use Data::Dumper;
-use Getopt::Std;
+use Time::Piece;
 
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
@@ -23,19 +23,29 @@ $keyword = $options{"keyword"};
 %filters = ();
 $filters{tNorma}->{code}	= \&applyTNormaFilter;
 $filters{tNorma}->{desc}	= "\n \tFiltro por tipo de norma: escriba el tipo de norma y presione enter, o solo presione enter si no desea aplicar este filtro.\n";
-$filters{tNorma}->{param}	= undef; #to show this is expected eventually
+$filters{tNorma}->{param}	= undef;
+$filters{tNorma}->{validator}	= \&validateTNorma;
+$filters{tNorma}->{errorMsg}	= "El tipo de norma ingresado no es valido. Ingrese un tipo de norma Valido. \n";
 $filters{anio}->{code}	=  \&applyAnioFilter;
 $filters{anio}->{desc}	= "\n \t- Filtro por año: Ingrese un rango de años de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
-$filters{anio}->{param}	= undef; 
+$filters{anio}->{param}	= undef;
+$filters{anio}->{validator}	= \&validateYear;
+$filters{anio}->{errorMsg}	= "El rango de años ingresado no es valido. Por favor, ingrese un rango de años valido.\n";
 $filters{nNorma}->{code} 	= \&applyNNormaFilter;
 $filters{nNorma}->{desc} 	= "\n \t- Filtro por numero de norma: Ingrese un rango de numeros de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
 $filters{nNorma}->{param}	= undef;
+$filters{nNorma}->{validator}	= \&validateNNorma;
+$filters{nNorma}->{errorMsg}	= "El numero de norma ingresado no es valido. Por favor ingrese un numero de norma valido.\n";
 $filters{gestion}->{code}	= \&applyGestionFilter;
 $filters{gestion}->{desc}	= "\n \t- Filtro por gestion: Ingrese el nombre de una gestion, o presione enter si no desea aplicar este filtro.\n";
-$filters{gestion}->{param}= undef; 
+$filters{gestion}->{param}= undef;
+$filters{gestion}->{validator}= \&validateGestion;
+$filters{gestion}->{errorMsg}= "La gestion ingresada no es valida. Por favor, ingrese una gestion valida.\n";
 $filters{emisor}->{code} 	= \&applyEmisorFilter;
 $filters{emisor}->{desc} 	= "\n \t- Filtro por emisor: Ingrese el nombre de un emisor, o presione enter si no desea aplicar este filtro.\n";
 $filters{emisor}->{param} = undef;
+$filters{emisor}->{validator} = \&validateEmisor;
+$filters{emisor}->{errorMsg} = "El emisor ingresado no es valido. Por favor, ingreso un emisor valido. \n";
 
 if ($options{"c"}) {
 	&doConsulta;
@@ -82,19 +92,27 @@ sub doConsulta {
 			}
 		}
 	}
-	&applyFilters();
-	&sortResults();
-	&printResults();
-	&saveQuery();
+	#&applyFilters();
+	# &sortResults();
+	# &printResults();
+	# &saveQuery();
 }
 
 sub showQueryMenu {
 	print "Seleccione los filtros que desee.  \n";
     foreach my $filter ( keys %filters  ) {
-    	print $filters{ $filter }->{desc} . "\n"; #printing description
-    	my $aux = <STDIN>;
-    	chomp($aux);
-    	$filters{ $filter }->{param} = $aux;
+    	my $coderef = $filters{ $filter }->{validator}; #code reference
+    	my $valid = 0;
+    	do {
+	    	print $filters{ $filter }->{desc} . "\n"; #printing description
+	    	my $aux = <STDIN>;
+	    	chomp($aux);
+	    	$filters{ $filter }->{param} = $aux;
+	    	$valid = $coderef->( $filters{ $filter }->{param} );
+	    	if (!$valid) {
+	    		print $filters{ $filter }->{errorMsg};
+	    	}
+    	} until ($valid);
 	}
 }
 
@@ -285,4 +303,68 @@ sub saveQuery {
 	}
 	close $fh;
 	print "Salida guardada en $INFODIR/resultado_$counter";
+}
+
+
+#-------------- VALIDATION FUNCTIONS ---------------------
+
+sub validateYear {
+	my $year = shift;
+	return 1 if ($year eq '');
+	return 0 if ($year!~m/[0-9]+-[0-9]+$/);
+	my @splittedYear = split('-', $year);
+	return 0 if ($splittedYear[0] > $splittedYear[1]);
+	return 0 if ($splittedYear[0] < 0);
+	my $t = Time::Piece->new();
+	return 0 if ($splittedYear[1] > $t->year);
+	return 1;
+}
+
+sub validateNNorma {
+	my $nNorma = shift;
+	return 1 if ($nNorma eq '');
+	return 0 if ($nNorma!~m/[0-9]+-[0-9]+$/);
+	my @splittedNNorma = split('-', $nNorma);
+	return 0 if ($splittedNNorma[0] > $splittedNNorma[1]);
+	return 0 if ($splittedNNorma[0] < 0);
+	return 1;
+}
+
+sub validateTNorma {
+	my $tNorma = shift;
+	return 1 if ($tNorma eq '');
+	my $MAEDIR = "MAEDIR";
+	my $filename = $MAEDIR . '/normas.mae';
+	open(FILE, "$filename") or die "Could not open file '$filename' $!";
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		return 1 if ($tNorma eq $splittedLine[0]);
+	}
+	return 0;
+}
+
+sub validateGestion {
+	my $gestion = shift;
+	return 1 if ($gestion eq '');
+	my $MAEDIR = "MAEDIR";
+	my $filename = $MAEDIR . '/gestiones.mae';
+	open(FILE, "$filename") or die "Could not open file '$filename' $!";
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		return 1 if ($gestion eq $splittedLine[0]);
+	}
+	return 0;
+}
+
+sub validateEmisor {
+	my $emisor = shift;
+	return 1 if ($emisor eq '');
+	my $MAEDIR = "MAEDIR";
+	my $filename = $MAEDIR . '/emisores.mae';
+	open(FILE, "$filename") or die "Could not open file '$filename' $!";
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		return 1 if ($emisor eq $splittedLine[0]);
+	}
+	return 0;
 }
