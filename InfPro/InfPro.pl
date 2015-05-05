@@ -3,7 +3,6 @@
 use warnings;
 #use Switch;
 use Data::Dumper;
-use Time::Piece;
 use Env;
 
 
@@ -13,14 +12,22 @@ if ($num_args == 0) {
 	die "InfPro necesita, al menos, un argumento. Ejecute 'InfPro.pl -a' para ver informacion al respecto";
 }
 my %options = ();
+my @informes = ();
 foreach (@ARGV) {
 	$options{"c"} = 1 if ($_=~m/^-c/);
 	$options{"a"} = 1 if ($_=~m/^-a/);
 	$options{"e"} = 1 if ($_=~m/^-e/);
 	$options{"i"} = 1 if ($_=~m/^-i/);
 	$options{"g"} = 1 if ($_=~m/^-g/);
-	$options{"keyword"} = $_ if ($_!~m/^-[caeig]/);
+	if ($_!~m/^-[caeig]/) {
+		if ($_!~m/^resultado_[0-9]*/) {
+			$options{"keyword"} = $_;
+		} else {
+			push(@informes, $_);
+		}
+	}
 }
+
 #----- Formateo inicial --------
 
 $keyword = $options{"keyword"};
@@ -146,13 +153,21 @@ sub doInforme {
 
 	my $INFODIR = $ENV{"INFODIR"};
 	my @flist;
-
-	if (opendir(DIRH, "$INFODIR")) {
-		@flist=readdir(DIRH);
-		closedir(DIRH);
-	}  else {
-		die("No se pudo abrir el directorio de $INFODIR");
+	print Dumper @informes;
+	print $#informes;
+	if ($#informes +1 > 0) {
+		print "\n OPCION 1 \n";
+		@flist = @informes;
+	} else {
+		print "\n OPCION 2 \n";
+		if (opendir(DIRH, "$INFODIR")) {
+			@flist=readdir(DIRH);
+			closedir(DIRH);
+		}  else {
+			die("No se pudo abrir el directorio de $INFODIR");
+		}
 	}
+	print Dumper @flist;
 	foreach (@flist) {
 		if ($_ eq '.' or $_ eq '..') {
 			next;
@@ -163,7 +178,7 @@ sub doInforme {
 	&applyFilters();
 	&sortResults();
 	&printResults();
-	&saveInforme();
+	&saveInforme() if ($options{'g'});
 }
 
 sub parseDocInforme {
@@ -244,7 +259,7 @@ sub doEstadistica {
 	&applyFilters();
 	&sortResultsByDate();
 	&printResultsEstadisticas();
-	&saveQueryEstadisticas();
+	&saveQueryEstadisticas() if ($options{'g'});
 }
 
 sub initEstadistica {
@@ -583,8 +598,8 @@ sub validateYear {
 	my @splittedYear = split('-', $year);
 	return 0 if ($splittedYear[0] > $splittedYear[1]);
 	return 0 if ($splittedYear[0] < 0);
-	my $t = Time::Piece->new();
-	return 0 if ($splittedYear[1] > $t->year);
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+	return 0 if ($splittedYear[1] > ($year +1900));
 	return 1;
 }
 
