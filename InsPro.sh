@@ -123,5 +123,6 @@ createDirs "$MAEDIR/tab" "$MAEDIR/tab/ant" "$PROCDIR/proc"
 writeConf
 installBinaries
 installTabs
-#unsetVariables
+unsetVariables
 
+logInfo "Instalación CONCLUIDA"
