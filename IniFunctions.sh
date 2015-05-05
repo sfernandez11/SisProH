@@ -2,8 +2,11 @@ source commonFunctions.sh
 
 
 function log(){
-	if [ "$LOGEXISTS" == "YES" ];then
-		chmod +x glog.sh
+	if [ "$VAREXPORTED" == "YES" ];then
+		 if [ ! -x glog.sh ]; then
+		 	chmod +x glog.sh
+			./glog.sh "IniPro" "Seteados permisos de ejecucion para glog.sh" 
+		 fi
 		./glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
 	fi
 }
@@ -291,7 +294,6 @@ function readVariables(){
  		return 1
  	else
  		logINFO "Se obtuvo el directorio para logs $LOGDIR"
- 		showDirectory $LOGDIR
  	fi
  
  	LOGSIZE=`grep "LOGSIZE" $CONFFILE | cut -s -f2 -d'='`
@@ -345,7 +347,21 @@ export DUPDIR
 export LOGDIR
 export LOGSIZE
 export PATH=$PATH:$BINDIR
-export LOGEXISTS="YES"
+export VAREXPORTED="YES"
+
+logINFO "Se exporto la variable BINDIR:  $BINDIR"
+logINFO "Se exporto la variable MAEDIR:  $MAEDIR"
+logINFO "Se exporto la variable NOVEDIR:  $NOVEDIR"
+logINFO "Se exporto la variable DATASIZE:  $DATASIZE"
+logINFO "Se exporto la variable ACEPDIR:  $ACEPDIR"
+logINFO "Se exporto la variable RECHDIR:  $RECHDIR"
+logINFO "Se exporto la variable PROCDIR:  $PROCDIR"
+logINFO "Se exporto la variable INFODIR:  $INFODIR"
+logINFO "Se exporto la variable DUPDIR:  $DUPDIR"
+logINFO "Se exporto la variable LOGDIR:  $LOGDIR"
+logINFO "Se exporto la variable LOGSIZE:  $LOGSIZE"
+logINFO "Se agrego BINDIR al PATH. PATH= $PATH"
+
 }
 
 
@@ -361,5 +377,5 @@ export INFODIR=""
 export DUPDIR=""
 export LOGDIR=""
 export LOGSIZE=""
-export LOGEXISTS=""
+export VAREXPORTED=""
 }

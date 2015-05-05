@@ -37,7 +37,7 @@ fi
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
-    log "WAR" "El demonio ya se encuentra inicializado, no se realizó ninguna acción"
+    log "WAR" "El demonio ya se encuentra inicializado (PID=$PID), no se realizó ninguna acción"
     exit 1
 fi
 
