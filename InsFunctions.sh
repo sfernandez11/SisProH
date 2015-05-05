@@ -320,6 +320,7 @@ function askVariables(){
 }
 
 function writeConf(){
+  logInfo "Actualizando la configuración del sistema . . ."
   local file="$CONFDIR/InsPro.conf"
   local sep='='
   local now=$(date +"%m-%d-%Y %H:%M:%S")
@@ -436,7 +437,7 @@ function showDirContent(){
 }
 
 function askInstall(){
-echo "Inicia la instalación? Si – No"
+echo "$1 ( 1 = Si – 2 = No )"
 
 	select yn in "Si" "No"; do
 	    case $yn in

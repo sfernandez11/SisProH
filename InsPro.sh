@@ -101,9 +101,18 @@ do
   # se cumplieron todas las validaciones confirmo inicio
   showStatus
   logInfo "Estado de la instalación: LISTA"
-  askInstall
+  askInstall "Inicia la instalación?"
 
 done
+
+if [ "$CONFIRM_INSTALL" = "SI" ]
+then
+  askInstall "Iniciando Instalación. Esta Ud. seguro?"
+  if [ "$CONFIRM_INSTALL" = "NO" ]
+  then
+    exit 0
+  fi
+fi
 
 # creacion de directorios
 logInfo "Creando Estructuras de directorio . . ."
