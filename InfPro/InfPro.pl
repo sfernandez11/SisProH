@@ -33,12 +33,12 @@ if ($options{"c"}) {
 } elsif ($options{"a"}) {
 
 } elsif ($options{"i"}) {
-	
+	&doInforme();
 } elsif ($options{"e"}) {
 	
 }
 
-#-------- Funciones ---------
+#-------- Funciones de consulta ---------
 
 sub doConsulta {
 	&initConsulta();
@@ -108,6 +108,169 @@ sub initConsulta {
 	$filters{emisor}->{errorMsg} = "El emisor ingresado no es valido. Por favor, ingreso un emisor valido. \n";
 }
 
+sub parseDoc {
+	my $file = shift;
+	open(FILE, "$file") or return 0;
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		chomp($splittedLine[13]);
+		my %fileParsed = (
+			'fuente' => $splittedLine[0],
+			'fecha_norma' => $splittedLine[1],
+			'nro_norma' => $splittedLine[2],
+			'anio_norma' => $splittedLine[3],
+			'causante' => $splittedLine[4],
+			'extracto' => $splittedLine[5],
+			'cod_tema' => $splittedLine[6],
+			'expedienteId' => $splittedLine[7],
+			'expedienteAnio' => $splittedLine[8],
+			'cod_firma' => $splittedLine[9],
+			'idRegistro' => $splittedLine[10],
+			'cod_gestion' => $splittedLine[11],
+			'cod_norma' => $splittedLine[12],
+			'cod_emisor' => $splittedLine[13],
+			'peso' => 0,
+		);
+		push @fileList, \%fileParsed;
+	}
+}
+
+#-----------Funciones de Informe -----------
+
+sub doInforme {
+	&initConsulta();
+	do {
+		&showQueryMenu;
+	} until (!&isEmptyFilter);
+
+	my $INFODIR = $ENV{"INFODIR"};
+	my @flist;
+
+	if (opendir(DIRH, "$INFODIR")) {
+		@flist=readdir(DIRH);
+		closedir(DIRH);
+	}  else {
+		die("No se pudo abrir el directorio de $INFODIR");
+	}
+	foreach (@flist) {
+		if ($_ eq '.' or $_ eq '..') {
+			next;
+		}
+		&parseDocInforme("$INFODIR/$_");
+	}
+
+	&applyFilters();
+	&sortResults();
+	&printResults();
+	&saveInforme();
+}
+
+sub parseDocInforme {
+	my $file = shift;
+	open(FILE, "$file") or return 0;
+	while (my $line = <FILE>) {
+		my @splittedLine = split(';', $line);
+		chomp($splittedLine[9]);
+		my %fileParsed = (
+			'cod_norma' => $splittedLine[0],
+			'emisor' => $splittedLine[1],
+			'cod_emisor' => $splittedLine[2],
+			'nro_norma' => $splittedLine[3],
+			'anio_norma' => $splittedLine[4],
+			'cod_gestion' => $splittedLine[5],
+			'fecha_norma' => $splittedLine[6],
+			'causante' => $splittedLine[7],
+			'extracto' => $splittedLine[8],
+			'id_registro' => $splittedLine[9],
+			'peso' => 0,
+		);
+		push @fileList, \%fileParsed;
+	}
+}
+
+sub saveInforme {
+	my $INFODIR = $ENV{"INFODIR"};
+	opendir(DIR, $INFODIR);
+	@files = grep(/^informe_/,readdir(DIR));
+	closedir(DIR);
+	my $counter = sprintf("%03d", $#files +1);
+	my $filename = $INFODIR . '/informe_' . $counter;
+	open(my $fh, '>', $filename) or die "Could not open file '$filename' $!";
+	foreach (@fileList) {
+		 print $fh "$_->{'cod_norma'};$_->{'emisor'};$_->{'cod_emisor'};$_->{'nro_norma'};$_->{'anio_norma'};$_->{'cod_gestion'};$_->{'fecha_norma'};$_->{'causante'};$_->{'extracto'};$_->{'idRegistro'}\n";
+	}
+	close $fh;
+	print "Salida guardada en $INFODIR/resultado_$counter";
+}
+
+#----------- Funciones de Estadistica -------------
+
+sub doEstadistica {
+	&initEstadistica();
+	do {
+		&showQueryMenu;
+	} until (!&isEmptyFilter);
+	my $procdir = $ENV{'PROCDIR'};
+	my @dlist;
+	if (opendir(DIRH,"$procdir")) {
+		@dlist=readdir(DIRH);
+		closedir(DIRH);
+	} else {
+		die("No se pudo abrir el directorio de $procdir");
+	}
+	foreach (@dlist) {
+		# ignorar . y .. :
+		next if ($_ eq "." || $_ eq ".." || $_ eq "proc");
+		if ( -d "$procdir/$_" ) {
+			my @flist;
+			if (opendir(DIRH, "$procdir/$_")) {
+				@flist=readdir(DIRH);
+				closedir(DIRH);
+			} else {
+				next;
+			}
+			my $dir = "$procdir/$_";
+			foreach (@flist) {
+				#open FILE, "<$dir/$_";
+				if ($_ eq '.' or $_ eq '..') {
+					next;
+				}
+				my @file_contents = &parseDoc("$dir/$_");
+			}
+		}
+	}
+	&applyFilters();
+	&sortResultsByDate();
+	&printResultsEstadisticas();
+	&saveQueryEstadisticas();
+}
+
+sub initEstadistica {
+	$filters{anio}->{code}	=  \&applyAnioFilter;
+	$filters{anio}->{desc}	= "\n \t- Filtro por año: Ingrese un rango de años de la forma 'xxxx-yyyy', o presione enter si no desea aplicar este filtro.\n";
+	$filters{anio}->{param}	= undef;
+	$filters{anio}->{validator}	= \&validateYear;
+	$filters{anio}->{errorMsg}	= "El rango de años ingresado no es valido. Por favor, ingrese un rango de años valido.\n";
+	$filters{gestion}->{code}	= \&applyGestionFilter;
+	$filters{gestion}->{desc}	= "\n \t- Filtro por gestion: Ingrese el nombre de una gestion, o presione enter si no desea aplicar este filtro.\n";
+	$filters{gestion}->{param}= undef;
+	$filters{gestion}->{validator}= \&validateGestion;
+	$filters{gestion}->{errorMsg}= "La gestion ingresada no es valida. Por favor, ingrese una gestion valida.\n";
+}
+
+sub printResultsEstadisticas {
+	my $i = 1;
+	foreach (@fileList) {
+		#TODO: Corregir los datos que muestra...
+		print "$i) Gestion: $_->{'cod_gestion'} Año: $_->{'anio_norma'} Emisores: ";
+		 # print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'peso'} \n
+		 # 	\t $_->{'causante'} \n
+		 # 	\t $_->{'extracto'} \n\n";
+		 $i++;
+	}
+}
+
+#-------- Funciones Generales ---------
 sub showQueryMenu {
 	print "Seleccione los filtros que desee.  \n";
     foreach my $filter ( keys %filters  ) {
@@ -138,32 +301,7 @@ sub isEmptyFilter {
 	return 1;
 }
 
-sub parseDoc {
-	my $file = shift;
-	open(FILE, "$file") or return 0;
-	while (my $line = <FILE>) {
-		my @splittedLine = split(';', $line);
-		chomp($splittedLine[13]);
-		my %fileParsed = (
-			'fuente' => $splittedLine[0],
-			'fecha_norma' => $splittedLine[1],
-			'nro_norma' => $splittedLine[2],
-			'anio_norma' => $splittedLine[3],
-			'causante' => $splittedLine[4],
-			'extracto' => $splittedLine[5],
-			'cod_tema' => $splittedLine[6],
-			'expedienteId' => $splittedLine[7],
-			'expedienteAnio' => $splittedLine[8],
-			'cod_firma' => $splittedLine[9],
-			'idRegistro' => $splittedLine[10],
-			'cod_gestion' => $splittedLine[11],
-			'cod_norma' => $splittedLine[12],
-			'cod_emisor' => $splittedLine[13],
-			'peso' => 0,
-		);
-		push @fileList, \%fileParsed;
-	}
-}
+
 
 sub applyFilters {
 	for my $filter ( keys(%filters) )  {
@@ -335,7 +473,7 @@ sub saveQuery {
 	my $filename = $INFODIR . '/resultado_' . $counter;
 	open(my $fh, '>', $filename) or die "Could not open file '$filename' $!";
 	foreach (@fileList) {
-		 print $fh "$_->{'cod_norma'} $_->{'emisor'} $_->{'cod_emisor'} $_->{'nro_norma'} $_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'causante'} $_->{'extracto'} $_->{'idRegistro'}\n";
+		 print $fh "$_->{'cod_norma'};$_->{'emisor'};$_->{'cod_emisor'};$_->{'nro_norma'};$_->{'anio_norma'};$_->{'cod_gestion'};$_->{'fecha_norma'};$_->{'causante'};$_->{'extracto'};$_->{'idRegistro'}\n";
 	}
 	close $fh;
 	print "Salida guardada en $INFODIR/resultado_$counter";
