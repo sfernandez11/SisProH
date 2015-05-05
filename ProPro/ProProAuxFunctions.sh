@@ -5,7 +5,7 @@ function getDocType() {
 	currentYear=$(date +"%Y")
 	if  (($YEAR < $currentYear)) 
 	then
-		$BINDIR/glog.sh "ProPro" "El archivo es de un año anterior al actual. Historico."
+		#$BINDIR/glog.sh "ProPro" "El archivo es de un año anterior al actual. Historico."
 		echo "HIST"
 	else
 		currentAdmin=`tail -1 $MAEDIR/gestiones.mae`
@@ -13,10 +13,10 @@ function getDocType() {
 		docAdmin=`echo $doc | sed 's/^\([^_]*\)_\(.*\)/\1/'`
 		if [ "$currentAdminName" = "$docAdmin" ]
 		then
-			$BINDIR/glog.sh "ProPro" "El archivo es corriente."
+			#$BINDIR/glog.sh "ProPro" "El archivo es corriente."
 			echo "CORR"
 		else
-			$BINDIR/glog.sh "ProPro" "El archivo es de este año pero gestion previa a actual. Historico."
+			#$BINDIR/glog.sh "ProPro" "El archivo es de este año pero gestion previa a actual. Historico."
 			echo "HIST"
 		fi
 	fi

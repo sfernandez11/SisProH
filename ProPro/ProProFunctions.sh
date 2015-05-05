@@ -1,4 +1,5 @@
 #!/bin/bash
+source commonFunctions.sh
 
 #Funcion que se encarga de armar los registros de salida para los registros históricos, corrientes
 # y rechazados.
@@ -38,6 +39,11 @@ function writeRecordOutput() {
 		if [ $2 = "HIST" ]
 		then
 			numeroNorma=`echo $line | cut -d ";" -f2`
+			if ! ENTERO=$(isInteger $numeroNorma) 
+			then
+				$BINDIR/glog.sh "ProPro" "Numero de norma no es un numero, se procede a convertir en 0 que es numero de norma invalida"
+				numeroNorma=0
+			fi
 			if [ $numeroNorma -le 0 ]
 			then
 				registroRechazado='SI'
@@ -77,10 +83,10 @@ return 0
 #En caso de no existir, la crea e inicializa.
 #Parametros $1 codigoGestion $2 anioEnCurso $3 codigoEmisor $4 codigoNorma
 function obtenerNumeroNormaCorriente () {
-	$BINDIR/glog.sh "ProPro" "Entrando a obtener el numero de la norma de la tabla axg.tab"
+	#$BINDIR/glog.sh "ProPro" "Entrando a obtener el numero de la norma de la tabla axg.tab"
 	local archivo=$MAEDIR/tab/axg.tab
 	#Me creo un archivo temporal para mover el original y trabajar con el temporal y luego de modificarlo, renombrar.
-	$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
+	#$BINDIR/glog.sh "ProPro" "Creo un archivo de tabla de contadores temporal para modificar y muevo el actual al directorio correspondiente"
 	#cp $archivo $MAEDIR/tab/axg.tabtemp
 	sed -e '$a\' $archivo >> $MAEDIR/tab/axg.tabtemp
 	archivoTemp=$MAEDIR/tab/axg.tabtemp
@@ -144,7 +150,7 @@ function chequearOCreaSubdirectorio () {
 #Chequea si la fecha con formato dd/mm/aaaa es una fecha valida. En caso de serlo devuelve 0, sino 1.
 #Recibe en $1 la fecha a analizar y en $2 en anio en curso
 function chequearFechaValida() {
-	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
+	#$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma es una fecha valida"
 	local dia=`echo $1 | cut -d "/" -f1`
 	if [ $dia -lt 1 -o $dia -gt 31 ]
 	then
@@ -166,7 +172,7 @@ function chequearFechaValida() {
 #Chequea si la fecha pasada en parametro $1 esta en el rango de la gestion.
 #En caso de estar devuelve 0, en caso de no, 1.
 function chequearFechaValidaRangoGestion(){
-	$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma esta dentro del rango de la gestion"
+	#$BINDIR/glog.sh "ProPro" "Chequeando si la fecha de la norma esta dentro del rango de la gestion"
 	local archivoMaestroGestiones=$MAEDIR/gestiones.mae
 	local resultGrep=`grep "^$codigoGestion;" $archivoMaestroGestiones`	
 	local fechaDesde=`echo $resultGrep | cut -d ";" -f2`
@@ -202,7 +208,7 @@ function chequearFechaValidaRangoGestion(){
 
 #chequea que el $2 codigo de firma sea valido para el $1 codigoEmisor
 function chequearCodigoFirmaValido() {
-	$BINDIR/glog.sh "ProPro" "Chequeando que la firma del emisor sea valida"	
+	#$BINDIR/glog.sh "ProPro" "Chequeando que la firma del emisor sea valida"	
 	local archivoEmisores=$MAEDIR/emisores.mae		
   	local resultaGrep=`grep "^$1;" $archivoEmisores`
 	local firmaDigital=`echo $resultaGrep | cut -d ";" -f3`
