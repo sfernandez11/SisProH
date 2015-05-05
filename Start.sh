@@ -47,6 +47,7 @@ PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
     log "INFO" "Se inició el demonio correctamente con PID: $PID" 
+    log "INFO" "Para detenerlo ejecute $ Stop.sh $1"
     exit 0
 else 
 	log "ERR" "Error al iniciar el demonio"
