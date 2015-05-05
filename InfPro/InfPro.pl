@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #use strict;
-use warnings;
+#use warnings;
 #use Switch;
 use Data::Dumper;
 use Env;
@@ -153,13 +153,9 @@ sub doInforme {
 
 	my $INFODIR = $ENV{"INFODIR"};
 	my @flist;
-	print Dumper @informes;
-	print $#informes;
 	if ($#informes +1 > 0) {
-		print "\n OPCION 1 \n";
 		@flist = @informes;
 	} else {
-		print "\n OPCION 2 \n";
 		if (opendir(DIRH, "$INFODIR")) {
 			@flist=readdir(DIRH);
 			closedir(DIRH);
@@ -167,18 +163,21 @@ sub doInforme {
 			die("No se pudo abrir el directorio de $INFODIR");
 		}
 	}
-	print Dumper @flist;
 	foreach (@flist) {
 		if ($_ eq '.' or $_ eq '..') {
 			next;
 		}
 		&parseDocInforme("$INFODIR/$_");
 	}
+	if (scalar(fileList)) {
+		&applyFilters();
+		&sortResults();
+		&printResults();
+		&saveInforme() if ($options{'g'});
+	} else {
+		print "No se encontraron files para procesar";
+	}
 
-	&applyFilters();
-	&sortResults();
-	&printResults();
-	&saveInforme() if ($options{'g'});
 }
 
 sub parseDocInforme {
