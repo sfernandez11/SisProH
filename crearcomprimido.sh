@@ -45,4 +45,4 @@ echo
 echo Descomprimiendo tar ...  
 echo
 
-tar -zxvf grupo02.tar.gz
+tar -zxf grupo02.tar.gz
