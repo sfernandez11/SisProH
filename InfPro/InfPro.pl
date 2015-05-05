@@ -616,7 +616,7 @@ sub validateNNorma {
 sub validateTNorma {
 	my $tNorma = shift;
 	return 1 if ($tNorma eq '');
-	my $MAEDIR = "MAEDIR";
+	my $MAEDIR = $ENV{"MAEDIR"};
 	my $filename = $MAEDIR . '/normas.mae';
 	open(FILE, "$filename") or die "Could not open file '$filename' $!";
 	while (my $line = <FILE>) {
@@ -629,7 +629,7 @@ sub validateTNorma {
 sub validateGestion {
 	my $gestion = shift;
 	return 1 if ($gestion eq '');
-	my $MAEDIR = "MAEDIR";
+	my $MAEDIR = $ENV{"MAEDIR"};
 	my $filename = $MAEDIR . '/gestiones.mae';
 	open(FILE, "$filename") or die "Could not open file '$filename' $!";
 	while (my $line = <FILE>) {
@@ -642,7 +642,7 @@ sub validateGestion {
 sub validateEmisor {
 	my $emisor = shift;
 	return 1 if ($emisor eq '');
-	my $MAEDIR = "MAEDIR";
+	my $MAEDIR = $ENV{"MAEDIR"};
 	my $filename = $MAEDIR . '/emisores.mae';
 	open(FILE, "$filename") or die "Could not open file '$filename' $!";
 	while (my $line = <FILE>) {
