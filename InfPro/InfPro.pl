@@ -4,6 +4,7 @@ use warnings;
 use Switch;
 use Data::Dumper;
 use Time::Piece;
+use Env;
 
 
 #----- Valido el input -------
@@ -11,7 +12,7 @@ my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
 	die "InfPro necesita, al menos, un argumento. Ejecute 'InfPro.pl -a' para ver informacion al respecto";
 }
-
+print Dumper @ENV;
 my %options = ();
 foreach (@ARGV) {
 	$options{"c"} = 1 if ($_=~m/^-c/);
@@ -21,7 +22,6 @@ foreach (@ARGV) {
 	$options{"g"} = 1 if ($_=~m/^-g/);
 	$options{"keyword"} = $_ if ($_!~m/^-[caeig]/);
 }
-print $options{"keyword"}; 
 #----- Formateo inicial --------
 
 $keyword = $options{"keyword"};
@@ -77,7 +77,7 @@ sub doConsulta {
 		@dlist=readdir(DIRH);
 		closedir(DIRH);
 	} else {
-		die("No se pudo abrir el directorio de PROCDIR");
+		die("No se pudo abrir el directorio de $procdir");
 	}
 	foreach (@dlist) {
 		# ignorar . y .. :
