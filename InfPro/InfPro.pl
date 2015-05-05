@@ -37,13 +37,38 @@ $keyword = $options{"keyword"};
 
 #------ Lanzo la opcion que corresponda ------
 if ($options{"c"}) {
-	&doConsulta;
+	do {
+		&doConsulta;
+	} until (!deseaContinuar('otra consulta'));
 } elsif ($options{"a"}) {
-
+	&showHelp();
 } elsif ($options{"i"}) {
-	&doInforme();
+	do {
+		&doInforme();
+	} until (!deseaContinuar('otro informe'));
 } elsif ($options{"e"}) {
-	&doEstadistica();
+	do {
+		&doEstadistica();
+	} until (!deseaContinuar('otra estadistica'));
+	
+}
+
+#--------- Ayuda ------------------------
+
+sub showHelp {
+	print "Bienvenido al sistema de informes de SisPro.\n
+	Para realizar una consulta ejecute:     InfPro.sh -c\n
+	\t La consulta se realizara sobre todos los archivos procesados previamente por ProPro. Si no se cuentan con archivos previamente procesados, no obtendra resultados.\n
+	\t Si desea incluir un parametro a buscar en la consulta, ejecute: Infpro.sh -c <palabra a buscar>\n
+	\t Si ademas desea guardar la salida de la consulta, utilize el parametro '-g'.\n
+	Para realizar un informe sobre las consultas ya corridas, ejecute: InfPro.sh -i.\n\n
+	\t El informe se realizara sobre todos los archivos procesados por la consulta, que hayan sido guardados usando el parametro '-g'.
+	\t Si desea que la busqueda se realice solo sobre ciertos archivos, introduzca el nombre de el/los archivos de la forma: InfPro.sh -i <resultado_xxx resultado_yyyy>\n
+	\t Si desea filtrar por alguna palabra, ingresela de la forma: InfPro.sh -i <palabra a buscar>\n
+	\t Si ademas quiere guardar la salida del informe, agregue el parametro '-g'\n\n
+	Para realizar estadisticas sobre los archivos procesados por ProPro, ejecute: InfPro.sh -e\n
+	\t Estas estadisticas correran sobre los archivos procesador por ProPro, si no hay archivos procesados no hara nada.\n
+	\t Si desea guardar las estadisticas obtenidas, agregue '-g' como parametro.\n\n";
 }
 
 #-------- Funciones de consulta ---------
@@ -82,10 +107,15 @@ sub doConsulta {
 			}
 		}
 	}
+
+	if (scalar(@fileList)) {
 	&applyFilters();
 	&sortResults();
 	&printResults();
 	&saveQuery() if ($options{'g'});
+	} else {
+		print "No se encontraron archivos para procesar.\n";
+	}
 }
 
 sub initConsulta {
@@ -169,13 +199,13 @@ sub doInforme {
 		}
 		&parseDocInforme("$INFODIR/$_");
 	}
-	if (scalar(fileList)) {
+	if (scalar(@fileList)) {
 		&applyFilters();
 		&sortResults();
 		&printResults();
 		&saveInforme() if ($options{'g'});
 	} else {
-		print "No se encontraron files para procesar";
+		print "No se encontraron files para procesar\n";
 	}
 
 }
@@ -204,6 +234,9 @@ sub parseDocInforme {
 }
 
 sub saveInforme {
+	if (!scalar(@fileList)) {
+		return;
+	}
 	my $INFODIR = $ENV{"INFODIR"};
 	opendir(DIR, $INFODIR);
 	@files = grep(/^informe_/,readdir(DIR));
@@ -215,7 +248,7 @@ sub saveInforme {
 		 print $fh "$_->{'cod_norma'};$_->{'emisor'};$_->{'cod_emisor'};$_->{'nro_norma'};$_->{'anio_norma'};$_->{'cod_gestion'};$_->{'fecha_norma'};$_->{'causante'};$_->{'extracto'};$_->{'idRegistro'}\n";
 	}
 	close $fh;
-	print "Salida guardada en $INFODIR/resultado_$counter";
+	print "Salida guardada en $INFODIR/resultado_$counter\n";
 }
 
 #----------- Funciones de Estadistica -------------
@@ -254,11 +287,16 @@ sub doEstadistica {
 			}
 		}
 	}
+
+	if (scalar(@fileList)) {
 	&joinEstadisticas();
 	&applyFilters();
 	&sortResultsByDate();
 	&printResultsEstadisticas();
 	&saveQueryEstadisticas() if ($options{'g'});
+	} else {
+		print "No se encontraron archivos para procesar\n";
+	}
 }
 
 sub initEstadistica {
@@ -288,7 +326,6 @@ sub parseDocEstadistica {
 
 	while (my $line = <FILE>) {
 		my @splittedLine = split(';', $line);
-		print $#splittedLine;
 		if (!length $procesedFile{'cod_gestion'}) {
 			$procesedFile{'cod_gestion'} = $splittedLine[11];
 		}
@@ -317,6 +354,10 @@ sub parseDocEstadistica {
 
 sub printResultsEstadisticas {
 	my $i = 1;
+	if (!scalar(@fileList)) {
+		print "No quedaron resultados para mostrar luego de aplicar los filtros.\n";
+		return;
+	}
 	foreach (@fileList) {
 		my $emisoresList = $_->{'emisores'};
 		my $emisores = join(', ', @$emisoresList);
@@ -329,6 +370,9 @@ sub printResultsEstadisticas {
 }
 
 sub saveQueryEstadisticas {
+	if (!scalar(@fileList)) {
+		return;
+	}
 	my $INFODIR = $ENV{"INFODIR"};
 	opendir(DIR, $INFODIR);
 	@files = grep(/^estadistica_/,readdir(DIR));
@@ -443,7 +487,6 @@ sub applyAnioFilter {
 	my $fileCount = scalar(@fileList);
 	my $i = 0;
 	my @filterSplitted = split('-', $filter);
-	print $fileCount;
 	while ($i < $fileCount) {
 		if ($fileList[$i]{anio_norma} <= $filterSplitted[0] || $fileList[$i]{anio_norma} >= $filterSplitted[1]) {
 			splice(@fileList, $i, 1);
@@ -563,6 +606,10 @@ sub swapFiles {
 }
 
 sub printResults {
+	if (!scalar(@fileList)) {
+		print "No quedaron resultados para mostrar luego de aplicar los filtros.\n";
+		return;
+	}
 	my $i = 1;
 	foreach (@fileList) {
 		 print "$i) $_->{'cod_norma'} $_->{'cod_emisor'} $_->{'nro_norma'}/$_->{'anio_norma'} $_->{'cod_gestion'} $_->{'fecha_norma'} $_->{'peso'} \n
@@ -573,6 +620,9 @@ sub printResults {
 }
 
 sub saveQuery {
+	if (!scalar(@fileList)) {
+		return;
+	}
 	my $INFODIR = $ENV{"INFODIR"};
 	opendir(DIR, $INFODIR);
 	@files = grep(/^resultado_/,readdir(DIR));
@@ -649,4 +699,18 @@ sub validateEmisor {
 		return 1 if ($emisor eq $splittedLine[0]);
 	}
 	return 0;
+}
+
+sub deseaContinuar {
+	my $text = shift;
+	do {
+		print "\n Desea realizar $text?  (S/N)";
+		my $answer = <STDIN>;
+		chomp($answer);
+		if (lc($answer) eq 's') {
+			return 1;
+		} elsif (lc($answer) eq 'n') {
+			return 0;
+		}
+	} until (0);
 }
