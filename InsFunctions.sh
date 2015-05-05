@@ -359,6 +359,9 @@ function installBinaries(){
   cp -a *.sh $BINDIR
   cp -a RecPro/*.sh $BINDIR
   cp -a ProPro/*.sh $BINDIR
+  cp -a InfPro/*.pm $BINDIR
+  cp -a InfPro/*.pl $BINDIR
+  
   chmod +x $BINDIR/*
 }
 

@@ -22,18 +22,7 @@ export LOGSIZE
 export GRUPO
 export CONFDIR
 
-# TODO: CONFDIR ya deberia existir
-if mkdir "$PWD/grupo02" 2>/dev/null ;
-then
-if ! createDirWithSubdir "$CONFDIR";
-then
-  echo "Erro al crear $CONFDIR"
-  exit 1
-fi
-else
-  echo "Erro al crear $PWD/grupo02"
-  exit 1
-fi
+
 
 
 
@@ -55,6 +44,18 @@ then
   # al llegar aca la instalacion esta incompleta
   
 else
+  # TODO: CONFDIR ya deberia existir
+  if mkdir "$PWD/grupo02" 2>/dev/null ;
+  then
+  if ! createDirWithSubdir "$CONFDIR";
+  then
+    echo "Error al crear $CONFDIR"
+    exit 1
+  fi
+  else
+    echo "Erro al crear $PWD/grupo02"
+    exit 1
+  fi
   initialize
 fi
 
