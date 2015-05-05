@@ -5,10 +5,13 @@ use Switch;
 use Data::Dumper;
 use Time::Piece;
 
+
+#----- Valido el input -------
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
 	die "InfPro necesita, al menos, un argumento. Ejecute 'InfPro.pl -a' para ver informacion al respecto";
 }
+
 my %options = ();
 foreach (@ARGV) {
 	$options{"c"} = 1 if ($_=~m/^-c/);
@@ -18,6 +21,9 @@ foreach (@ARGV) {
 	$options{"g"} = 1 if ($_=~m/^-g/);
 	$options{"keyword"} = $_ if ($_!~m/^-[caeig]/);
 }
+print $options{"keyword"}; 
+#----- Formateo inicial --------
+
 $keyword = $options{"keyword"};
 @fileList = ();
 %filters = ();
@@ -47,6 +53,8 @@ $filters{emisor}->{param} = undef;
 $filters{emisor}->{validator} = \&validateEmisor;
 $filters{emisor}->{errorMsg} = "El emisor ingresado no es valido. Por favor, ingreso un emisor valido. \n";
 
+
+#------ Lanzo la opcion que corresponda ------
 if ($options{"c"}) {
 	&doConsulta;
 } elsif ($options{"a"}) {
@@ -57,13 +65,13 @@ if ($options{"c"}) {
 	
 }
 
-
+#-------- Funciones ---------
 
 sub doConsulta {
 	do {
 		&showQueryMenu;
 	} until (!&isEmptyFilter);
-	my $procdir = "PROCDIR";
+	my $procdir = $ENV{'PROCDIR'};
 	my @dlist;
 	if (opendir(DIRH,"$procdir")) {
 		@dlist=readdir(DIRH);
@@ -318,7 +326,7 @@ sub printResults {
 }
 
 sub saveQuery {
-	my $INFODIR = "INFODIR";
+	my $INFODIR = $ENV{"INFODIR"};
 	opendir(DIR, $INFODIR);
 	@files = grep(/^resultado_/,readdir(DIR));
 	closedir(DIR);
