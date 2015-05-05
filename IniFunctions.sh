@@ -336,6 +336,7 @@ function showDirectory(){
 
 function exportEnvVar(){
 export BINDIR
+export CONFDIR
 export MAEDIR
 export NOVEDIR
 export DATASIZE
