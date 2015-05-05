@@ -244,7 +244,7 @@ sub doEstadistica {
 	&applyFilters();
 	&sortResultsByDate();
 	&printResultsEstadisticas();
-	#&saveQueryEstadisticas();
+	&saveQueryEstadisticas();
 }
 
 sub initEstadistica {
@@ -274,6 +274,7 @@ sub parseDocEstadistica {
 
 	while (my $line = <FILE>) {
 		my @splittedLine = split(';', $line);
+		print $#splittedLine;
 		if (!length $procesedFile{'cod_gestion'}) {
 			$procesedFile{'cod_gestion'} = $splittedLine[11];
 		}
@@ -303,9 +304,8 @@ sub parseDocEstadistica {
 sub printResultsEstadisticas {
 	my $i = 1;
 	foreach (@fileList) {
-		my @emisoresList = $_->{'emisores'};
-		my $emisores = join(', ', @emisoresList);
-		print Dumper $emisores;
+		my $emisoresList = $_->{'emisores'};
+		my $emisores = join(', ', @$emisoresList);
 		print "$i) Gestion: $_->{'cod_gestion'} Año: $_->{'anio_norma'} Emisores: $emisores \n";
 		print "\tCantidad de resoluciones: $_->{'resoluciones'} \n";
 		print "\tCantidad de disposiciones: $_->{'disposiciones'} \n";
@@ -314,12 +314,46 @@ sub printResultsEstadisticas {
 	}
 }
 
+sub saveQueryEstadisticas {
+	my $INFODIR = $ENV{"INFODIR"};
+	opendir(DIR, $INFODIR);
+	@files = grep(/^estadistica_/,readdir(DIR));
+	closedir(DIR);
+	my $counter = sprintf("%03d", $#files +1);
+	my $filename = $INFODIR . '/estadistica_' . $counter;
+	open(my $fh, '>', $filename) or die "Could not open file '$filename' $!";
+	foreach (@fileList) {
+		my $emisoresList = $_->{'emisores'};
+		my $emisores = join(', ', @$emisoresList);
+		print $fh "Gestion: $_->{'cod_gestion'} Año: $_->{'anio_norma'} Emisores: $emisores \n";
+		print $fh "\tCantidad de resoluciones: $_->{'resoluciones'} \n";
+		print $fh "\tCantidad de disposiciones: $_->{'disposiciones'} \n";
+		print $fh "\tCantidad de convenios: $_->{'convenios'} \n";
+	}
+	close $fh;
+	print "Salida guardada en $INFODIR/estadistica_$counter\n\n";
+}
+
 sub joinEstadisticas {
 	foreach my $file (@fileList) {
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'cod_gestion'} = $file->{'cod_gestion'};
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'anio_norma'} = $file->{'anio_norma'};
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'fecha_norma'} = $file->{'fecha_norma'};
-		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'emisores'} = $file->{'emisores'}; #TODO: Hacer un buen merge...
+		
+		my @emisores = ();
+		if (defined $estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'emisores'}) {
+			@emisores = @{$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'emisores'}};
+			foreach my $emisor (@{$file->{'emisores'}}) {
+				my $found = 0;
+				foreach (@emisores) {
+					$found = 1 if ($_ eq $emisor);
+				}
+				push(@emisores, $emisor) if ($found);
+			}
+		} else {
+			@emisores = @{$file->{'emisores'}};
+		}
+		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'emisores'} = \@emisores; #TODO: Hacer un buen merge...
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'convenios'} += $file->{'convenios'};
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'resoluciones'} += $file->{'resoluciones'};
 		$estadisticaFileList{$file->{'cod_gestion'} . $file->{'anio_norma'}}->{'disposiciones'} += $file->{'disposiciones'};
@@ -536,7 +570,7 @@ sub saveQuery {
 		 print $fh "$_->{'cod_norma'};$_->{'emisor'};$_->{'cod_emisor'};$_->{'nro_norma'};$_->{'anio_norma'};$_->{'cod_gestion'};$_->{'fecha_norma'};$_->{'causante'};$_->{'extracto'};$_->{'idRegistro'}\n";
 	}
 	close $fh;
-	print "Salida guardada en $INFODIR/resultado_$counter";
+	print "Salida guardada en $INFODIR/resultado_$counter\n\n";
 }
 
 
