@@ -81,7 +81,7 @@ else
 		#Primero busco en el archivo de configuracion de la instalacion el campo de secuencia y lo asocio a la variable.
 		SECUENCIA=`grep SECUENCIA $CONFDIR/InsPro.conf | cut -d '=' -f 2`
 		#Creo una nueva secuencia sumandole uno a la anterior.
-		NUEVA_SECUENCIA=`expr $SECUENCIA + 1`
+		NUEVA_SECUENCIA=$(( SECUENCIA + 1))
 		#Reemplazo la linea vieja del archivo por el nuevo valor de secuencia.
 		sed s/SECUENCIA=$SECUENCIA/SECUENCIA=$NUEVA_SECUENCIA/ $CONFDIR/InsPro.conf > $CONFDIR/temporal
 		#Elimino el archivo viejo de configuracion
