@@ -39,16 +39,19 @@ $keyword = $options{"keyword"};
 if ($options{"c"}) {
 	do {
 		&doConsulta;
+		@fileList = ();
 	} until (!deseaContinuar('otra consulta'));
 } elsif ($options{"a"}) {
 	&showHelp();
 } elsif ($options{"i"}) {
 	do {
 		&doInforme();
+		@fileList = ();
 	} until (!deseaContinuar('otro informe'));
 } elsif ($options{"e"}) {
 	do {
 		&doEstadistica();
+		@fileList = ();
 	} until (!deseaContinuar('otra estadistica'));
 	
 }
@@ -488,7 +491,7 @@ sub applyAnioFilter {
 	my $i = 0;
 	my @filterSplitted = split('-', $filter);
 	while ($i < $fileCount) {
-		if ($fileList[$i]{anio_norma} <= $filterSplitted[0] || $fileList[$i]{anio_norma} >= $filterSplitted[1]) {
+		if ($fileList[$i]{anio_norma} < $filterSplitted[0] || $fileList[$i]{anio_norma} > $filterSplitted[1]) {
 			splice(@fileList, $i, 1);
 			$fileCount = scalar @fileList;
 		} else {
