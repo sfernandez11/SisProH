@@ -40,9 +40,9 @@ if [ "$PID" != "" ]; then
     log "WAR" "El demonio ya se encuentra inicializado (PID=$PID), no se realizó ninguna acción"
     exit 1
 fi
-
+echo Iniciando $1 . . .
 nohup $1.sh > /dev/null 2>&1 &
-
+sleep 1
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
