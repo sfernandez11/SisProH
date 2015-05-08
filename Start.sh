@@ -19,7 +19,7 @@ function log(){
 		echo "[$1] $2"
 	else
 		echo "[$1] $2"
-		./glog.sh "$CALLER" "$2" "$1"
+		glog.sh "$CALLER" "$2" "$1"
 	fi
 }
 

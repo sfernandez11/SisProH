@@ -369,7 +369,7 @@ function installTabs(){
   logInfo "Instalando Archivos Maestros y Tablas"
   cp -a Datos/*.mae $MAEDIR
   cp -ar Datos/*.tab "$MAEDIR/tab"
-  cp -a pruebas/* $NOVEDIR
+  #cp -a pruebas/* $NOVEDIR
 }
 
 function unsetVariables(){

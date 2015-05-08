@@ -7,12 +7,12 @@
 
 #INFORMA AL LOG SOBRE LA EJECUCION
 function logInfo(){
-    ./glog.sh "RecPro" "$1"
+    glog.sh "RecPro" "$1"
 }
 
 #INFORMA AL LOG DE ERRORES OCURRIDOS EN LA EJECUCION
 function logError(){
-    logInfo $1
+    glog.sh "RecPro" "$1" "ERR"
 }
 
 #PROCESA LAS NOVEDADES, MUEVE LOS ARCHIVOS A LOS DIRECTORIOS
@@ -205,14 +205,14 @@ function aceptarArchivo(){
 		mkdir $ACEPDIR/$codgestion
 	fi
 	logInfo  "Aceptado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
-	./mover.sh $1 $ACEPDIR/$codgestion RecPro
+	mover.sh $1 $ACEPDIR/$codgestion RecPro
 	return 0	
 }
 
 function rechazarArchivo(){
 	
 	logInfo "Movido ${1##*/} - Destino $RECHDIR/${1##*/}"
-	./mover.sh  $1 $RECHDIR RecPro
+	mover.sh  $1 $RECHDIR RecPro
 	return 0
 }
 
