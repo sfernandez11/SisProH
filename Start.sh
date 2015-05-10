@@ -42,14 +42,13 @@ if [ "$PID" != "" ]; then
 fi
 echo Iniciando $1 . . .
 nohup $1.sh > /dev/null 2>&1 &
-sleep 1
-PID=$(getPid $1)
+PID=$!
 
 if [ "$PID" != "" ]; then
-    log "INFO" "Se inició el demonio correctamente con PID: $PID" 
+    log "INFO" "Se inició $1 correctamente con PID: $PID" 
     log "INFO" "Para detenerlo ejecute $ Stop.sh $1"
     exit 0
 else 
-	log "ERR" "Error al iniciar el demonio"
+	log "ERR" "Error al iniciar el proceso $1"
 	exit 1
 fi

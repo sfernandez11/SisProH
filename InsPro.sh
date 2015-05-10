@@ -34,6 +34,7 @@ then
   verifyDirsExisting
   initialize
   setEnviroment
+  
   if installComplete;
   then
     showStatus
@@ -42,6 +43,20 @@ then
     exit 0
   fi
   # al llegar aca la instalacion esta incompleta
+  showStatusNoMissing
+  if thereAreMissingComponents;
+  then
+    logInfo "$(componentsMissing)"
+  fi
+  if [ -d $BINDIR ] && [ $(binariesNotInstalled) -gt 0 ];
+  then
+    logInfo "Faltan binarios"
+  fi
+  if [ -d $MAEDIR ] && [ $(maesNotInstalled) -gt 0 ];
+  then
+    logInfo "Faltan Maestros"
+  fi
+  logInfo "Estado de la instalación: INCOMPLETA"
   
 else
   # TODO: CONFDIR ya deberia existir
@@ -128,9 +143,15 @@ createDirs $MAEDIR $BINDIR $INFODIR $DUPDIR $LOGDIR
 createDirs "$MAEDIR/tab" "$MAEDIR/tab/ant" "$PROCDIR/proc"
 
 writeConf
-installBinaries
-installTabs
+if [ $(binariesNotInstalled) -gt 0 ];
+then
+  installBinaries
+fi
 
+if [ $(maesNotInstalled) -gt 0 ];
+then
+  installTabs
+fi
 
 logInfo "Instalación CONCLUIDA"
 unsetVariables
