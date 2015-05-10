@@ -3,11 +3,11 @@ source commonFunctions.sh
 
 function log(){
 	if [ "$VAREXPORTED" == "YES" ];then
-		 if [ ! -x glog.sh ]; then
-		 	chmod +x glog.sh
-			./glog.sh "IniPro" "Seteados permisos de ejecucion para glog.sh" 
+		 if [ ! -x $BINDIR/glog.sh ]; then
+		 	chmod +x $BINDIR/glog.sh
+			glog.sh "IniPro" "Seteados permisos de ejecucion para glog.sh" 
 		 fi
-		./glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
+		glog.sh "IniPro" "$1" "$2" #1= log message, 2= log level
 	fi
 }
 
