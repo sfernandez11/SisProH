@@ -138,10 +138,14 @@ function noCompatiblePerlVersion(){
 function isDirSimple(){
   if echo $1 | grep -E '^/?([[:alnum:]]+[_.-]*[[:alnum:]]*)+/?$' > /dev/null;
   then
+    if isInteger $1;
+    then
+      return 1
+    fi
     return 0
-  else
-    return 1
-  fi
+  fi  #else
+  return 1
+  #fi
 }
 
 function isDirPath(){
@@ -158,7 +162,7 @@ function isValid(){
 	  DUPDIR)
 	    if isDirSimple $2;
 	    then
-	      if [[ $2 == conf ]] || [[ $2 == pruebas ]]
+	      if [[ $2 =~ ^/?conf ]] || [[ $2 =~ ^/?pruebas ]]
 	      then
 	        logError "\"$2\" No puede ser elegido como nombre."
 	        return 1
@@ -171,7 +175,7 @@ function isValid(){
 	  *DIR)
 	    if isDirSimple $2;
 	    then
-	      if [[ $2 == conf ]] || [[ $2 == pruebas ]]
+        if [[ $2 =~ ^/?conf ]] || [[ $2 =~ ^/?pruebas ]]
 	      then
 	        logError "\"$2\" No puede ser elegido como nombre."
 	        return 1
@@ -219,6 +223,7 @@ function createDirWithSubdir(){
 }
 
 function showStatus(){
+  local index
   echo
   echo
   logInfo "--- TP SO7508 Primer Cuatrimestre 2015. Tema H Copyright © Grupo 02 ---"
@@ -452,31 +457,130 @@ echo "$1 ( 1 = Si – 2 = No )"
 }
 
 function installComplete() {
-  for i in "${installed[@]}"
-  do
-    if [ $i = false ]
-    then
-      return 1
-    fi
-  done
+  if thereAreMissingComponents;
+  then
+    return 1
+  fi
   if [ $(binariesNotInstalled) -gt 0 ];
   then
     return 1
   fi
+  if [ $(maesNotInstalled) -gt 0 ];
+  then
+    return 1
+  fi
+
   return 0
 }
 
-function binariesMissing(){
-  local origen=$1
-  diff -q $origen $BINDIR | grep $origen:.*\.sh | wc -l
+function filesMissing(){
+  local from=$1
+  local extension=$2
+  local to=$3
+  diff -q $from $to | grep $from:.*\.$extension | wc -l
 }
 
 function binariesNotInstalled(){
-  local binBase=$(binariesMissing $PWD)
-  local binRecPro=$(binariesMissing "$PWD/RecPro")
-  local binProPro=$(binariesMissing "$PWD/ProPro")
+  local binBase=$(filesMissing $PWD "sh" "$BINDIR")
+  local binRecPro=$(filesMissing "$PWD/RecPro" "sh" "$BINDIR")
+  local binProPro=$(filesMissing "$PWD/ProPro" "sh" "$BINDIR")
+  local binInfPro=$(filesMissing "$PWD/InfPro" "pl" "$BINDIR")
+  local auxInfPro=$(filesMissing "$PWD/InfPro" "pm" "$BINDIR")
   #echo "Faltan $binBase de pwd, $binRecPro de RecPro y $binProPro de ProPro"
-  let total=$binBase+$binRecPro+$binProPro
+  let total=$binBase+$binRecPro+$binProPro+$binInfPro+$auxInfPro
   #echo "En total faltan $total binarios"
   echo $total
+}
+
+function maesNotInstalled(){
+  local maeBase=$(filesMissing "$PWD/Datos" "mae" $MAEDIR)
+  local maeTab=$(filesMissing "$PWD/Datos" "tab" $MAEDIR/tab)
+  #echo "Faltan $maeBase de maebase, $maeTab de maetab"
+  let total=$maeBase+$maeTab
+  #echo "En total faltan $total maes"
+  echo $total
+}
+
+function componentsMissing(){
+  local comp
+  for (( i = 0; i < ${#variables[@]}; i++ ));
+  do
+    if [ "${installed[$i]}" = false ];
+    then
+      comp=$comp" ${variables[$i]}"
+    fi
+  done
+  echo "Componentes faltantes: $comp "
+}
+
+function thereAreMissingComponents(){
+  for i in "${installed[@]}"
+  do
+    if [ $i = false ]
+    then
+      return 0
+    fi
+  done
+  return 1
+}
+
+function showStatusNoMissing(){
+  local index
+  echo
+  echo
+  logInfo "--- TP SO7508 Primer Cuatrimestre 2015. Tema H Copyright © Grupo 02 ---"
+  echo
+  logInfo "Directorio de Configuracion: $CONFDIR"
+  showDirContent $CONFDIR
+  index=$(getIndex variables BINDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de Ejecutables: $BINDIR"
+    showDirContent $BINDIR
+  fi
+  index=$(getIndex variables MAEDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de Maestros y Tablas: $MAEDIR"
+    showDirContent $MAEDIR
+  fi
+  index=$(getIndex variables NOVEDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de recepción de documentos p/ protocolización: $NOVEDIR"
+  fi
+  logInfo "Espacio mínimo libre para arribos: $DATASIZE Mb"
+  index=$(getIndex variables ACEPDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de Archivos Aceptados: $ACEPDIR"
+  fi
+  index=$(getIndex variables RECHDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de Archivos Rechazados: $RECHDIR"
+  fi
+  index=$(getIndex variables PROCDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio de Archivos Protocolizados: $PROCDIR"
+  fi
+  index=$(getIndex variables INFODIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio para informes y estadísticas: $INFODIR"
+  fi
+  index=$(getIndex variables DUPDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Nombre para el repositorio de duplicados: $DUPDIR"
+  fi
+  index=$(getIndex variables LOGDIR)
+  if [ "${installed[$index]}" = true ];
+  then
+    logInfo "Directorio para Archivos de Log: $LOGDIR"
+    showDirContent $LOGDIR
+  fi
+  logInfo "Tamaño máximo para archivos de log: $LOGSIZE Kb"
+    
 }

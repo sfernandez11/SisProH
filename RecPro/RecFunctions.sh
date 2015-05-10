@@ -230,9 +230,9 @@ if hayNovedadesPendientes $ACEPDIR;
 	
 	if [ "$PID" = "" ]; 
 	then
-		./Start.sh ProPro
-		PID=$(getPid ProPro)
-		logInfo "ProPro corriendo bajo el no.: $PID"
+		Start.sh ProPro RecPro
+		#PID=$(getPid ProPro)
+		#logInfo "ProPro corriendo bajo el no.: $PID"
 		return 0
 	else
 		logInfo "Invocacion de ProPro propuesta para el siguiente ciclo $PID"
