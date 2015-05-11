@@ -27,12 +27,10 @@ descargado:
 		Copiar el archivo grupo02.tar.gz en ese directorio. Para realizar esto puede copiarlo 
 		a mano o desde el terminal, haciendo uso del comando:
   					mv ./grupo02.tar.gz [DIRECTORIO DESTINO]
-	  	o bien
-				    cp ./grupo02.tar.gz [DIRECTORIO DESTINO] para copiarlo
 
 		Descomprimir el archivo grupo02.tar.gz de manera de generar grupo02.tar Para realizar esto 
 		puede ingresar el siguiente comando en el terminal (ubicándose en el directorio de trabajo):
-  					tar -zxf grupo02.tar.gz -C [DESTINO]
+  					tar -zxf grupo02.tar.gz
 
 		Extraer los archivos del tar.
 
@@ -102,16 +100,17 @@ Una vez completada la instalación, tendremos en el directorio grupo02 los sigui
 
 PRIMEROS PASOS PARA PODER EJECUTAR EL PROGRAMA
 
-Desde la carpeta raíz de lo instalado (grupo02), ejecutar el siguiente comando para inicializar 
-la sesión de terminal, reemplazando BINDIR por el nombre del directorio para los ejecutables
-elegido durante el proceso de  instalación:
-	. ./BINDIR/IniPro.sh
+Ubicarse en el directorio de ejecutables indicado en el paso anterior, por ejemplo si se utilizó la ubicación default, desde el contenedor del directorio de grupo ejecutar:
+	$ cd grupo02/bin
+
+Eecutar el siguiente comando para inicializar la sesión de terminal:
+	$ . IniPro.sh
 
 [Es importante poner el '.' previo al comando en sí mismo]
 
-Luego, si se desea, se podrá iniciar inmediatamente el procesamiento en segundo  plano siguiendo
-las instrucciones que se muestran por pantalla. De no hacerlo, se deberá ejecutar el comando:
-		Start.sh RecPro
+Luego, si se desea, se podrá iniciar inmediatamente el procesamiento en segundo  plano siguiendo las instrucciones
+ que se muestran por pantalla. De no hacerlo, se deberá ejecutar el comando:
+		$ Start.sh RecPro
 
 A medida que se depositen archivos con novedades en la carpeta correspondiente a las mismas
 (cuyo nombre se eligió en la instalación), dichas novedades serán  movidas y procesadas, siempre
@@ -140,7 +139,16 @@ Una vez ejecutado esto, el RecPro.sh dejará de ejecutarse, y el programa finali
 
 GENERAR CONSULTAS, INFORMES Y ESTADISTICAS
 
-Luego de haber procesado los archivos, se pueden generar consultas, informes y estadisticas usando
-el comando InfPro.pl presente en la carpeta de ejecutables. Para ver detalladamente cómo usarlo, ejecutar el comando:
+Luego de haber procesado los archivos, se pueden generar consultas, informes y estadisticas usando el comando
+InfPro.pl presente en la carpeta de ejecutables. Para ver detalladamente cómo usarlo, ejecutar el comando:
 	InfPro.pl -a
 que mostrará por pantalla el manual de ayuda del mismo.
+
+	InfPro.pl -c
+Ira preguntando por pantalla por qué tipo de filtro se quiere realizar la consulta. Es obligatorio al menos seleccionar un filtro, en caso de no hacerlo, vuelve a realizar desde el principio que filtro desea aplicar. En caso de incorporar -g como parámetro la consulta se persistirá en INFODIR con el nombre resultado\_xxx con xxx la numeración en orden de la consulta a grabar realizada.
+
+	InfPro.pl -i resultado_xxx
+Realiza una consulta eligiendo alguno de los filtros ofrecidos, sobre la consulta realizada y persistida por InfPro.pl -c -g. Es obligatorio elegir un filtro para realizar la consulta del informe, en caso de no hacerlo, se le volverán a preguntar por los filtros ofrecidos.
+
+	InfPro.pl -e
+Solicita filtro sobre la gestion o sobre el rango de fechas sobre los que se desea realizar la estadística. El filtro es obligatorio, en caso de no seleccionar ninguno, se le solicitarán los filtros nuevamente hasta seleccionar al menos uno. La estadística agrupa por gestión y año, mostrando cantidad de resoluciones, cantidad de disposiciones y cantidad de convenios. En caso de incorporar -g como parámetro los resultados los persiste en la carpeta INFODIR con el nombre estadistica\_xxx con xxx la numeración en orden de la estadística a grabar realizada.
