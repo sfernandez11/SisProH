@@ -34,7 +34,7 @@ fi
 PID=$(getPid $1)
 
 if [ "$PID" != "" ]; then
-    log "ERR" "Deteniendo proceso con pid $PID .."
+    log "INFO" "Deteniendo proceso con pid $PID .."
     kill -9 $PID
     
     if [ $? -ne 0 ];
@@ -49,6 +49,6 @@ if [ "$PID" != "" ]; then
         exit 1
     fi
 
-    log "ERR" "Se detuvo el demonio"
+    log "INFO" "Se detuvo el demonio"
     exit 0
 fi
