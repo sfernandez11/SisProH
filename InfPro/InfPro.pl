@@ -60,16 +60,16 @@ if ($options{"c"}) {
 
 sub showHelp {
 	print "Bienvenido al sistema de informes de SisPro.\n
-	Para realizar una consulta ejecute:     InfPro.sh -c\n
+	Para realizar una consulta ejecute:     InfPro.pl -c\n
 	\t La consulta se realizara sobre todos los archivos procesados previamente por ProPro. Si no se cuentan con archivos previamente procesados, no obtendra resultados.\n
-	\t Si desea incluir un parametro a buscar en la consulta, ejecute: Infpro.sh -c <palabra a buscar>\n
+	\t Si desea incluir un parametro a buscar en la consulta, ejecute: InfPro.pl -c <palabra a buscar>\n
 	\t Si ademas desea guardar la salida de la consulta, utilize el parametro '-g'.\n
-	Para realizar un informe sobre las consultas ya corridas, ejecute: InfPro.sh -i.\n\n
+	Para realizar un informe sobre las consultas ya corridas, ejecute: InfPro.pl -i.\n\n
 	\t El informe se realizara sobre todos los archivos procesados por la consulta, que hayan sido guardados usando el parametro '-g'.
-	\t Si desea que la busqueda se realice solo sobre ciertos archivos, introduzca el nombre de el/los archivos de la forma: InfPro.sh -i <resultado_xxx resultado_yyyy>\n
-	\t Si desea filtrar por alguna palabra, ingresela de la forma: InfPro.sh -i <palabra a buscar>\n
+	\t Si desea que la busqueda se realice solo sobre ciertos archivos, introduzca el nombre de el/los archivos de la forma: InfPro.pl -i <resultado_xxx resultado_yyyy>\n
+	\t Si desea filtrar por alguna palabra, ingresela de la forma: InfPro.pl -i <palabra a buscar>\n
 	\t Si ademas quiere guardar la salida del informe, agregue el parametro '-g'\n\n
-	Para realizar estadisticas sobre los archivos procesados por ProPro, ejecute: InfPro.sh -e\n
+	Para realizar estadisticas sobre los archivos procesados por ProPro, ejecute: InfPro.pl -e\n
 	\t Estas estadisticas correran sobre los archivos procesador por ProPro, si no hay archivos procesados no hara nada.\n
 	\t Si desea guardar las estadisticas obtenidas, agregue '-g' como parametro.\n\n";
 }
