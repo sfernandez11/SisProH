@@ -204,7 +204,7 @@ function aceptarArchivo(){
 	then
 		mkdir $ACEPDIR/$codgestion
 	fi
-	logInfo  "Aceptado ${1##*/} - Destino $RECHDIR/$codgestion/${1##*/}"
+	logInfo  "Aceptado ${1##*/} - Destino $ACEPDIR/$codgestion/${1##*/}"
 	mover.sh $1 $ACEPDIR/$codgestion RecPro
 	return 0	
 }
