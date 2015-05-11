@@ -26,13 +26,13 @@ descargado:
 
 		Copiar el archivo grupo02.tar.gz en ese directorio. Para realizar esto puede copiarlo 
 		a mano o desde el terminal, haciendo uso del comando:
-  					mv ./grupo02.tar.gz [DIRECTORIO DESTINO]
+  					cp grupo02.tar.gz [DIRECTORIO DESTINO]
 
-		Descomprimir el archivo grupo02.tar.gz de manera de generar grupo02.tar Para realizar esto 
-		puede ingresar el siguiente comando en el terminal (ubicándose en el directorio de trabajo):
-  					tar -zxf grupo02.tar.gz
+    Descomprimir el archivo grupo02.tar.gz. Para realizar esto puede ingresar el siguiente 
+    comando en el terminal 	  (ubicándose en el directorio de trabajo):
 
-		Extraer los archivos del tar.
+      tar -zxf grupo02.tar.gz
+
 
 Una vez descomprimido el paquete, se generará una carpeta grupo02, en el directorio de destino. La misma
 contará con los siguientes Directorios:
@@ -62,19 +62,32 @@ COMO INSTALAR
 2) Ejecutar el comando de instalación desde el terminal:
 	./InsPro.sh
 
-3) Proveer los paths de directorios a crear y datos pedidos:
-	Directorio de Archivos Maestros y Tablas
+3) Proveer los paths de directorios a crear.
+
+    Directorio de Archivos Maestros y Tablas
     Directorio de Novedades
-    Tamaño mínimo libre para el Directorio de Novedades
     Directorio de Novedades Aceptadas
     Directorio de grabación de Consultas, Informes y estadisticas
     Directorio de Archivos Rechazados
+    Directorio de Documentos Protocolizados
     Directorio de logs
-    SubDirectorio de Resguardo de Archivos Duplicados
     Directorio de Ejecutables
+    Directorio Simple de Resguardo de Archivos Duplicados
+    
+Proveer los siguientes valores con números enteros:
+    Tamaño mínimo en Mb libre para el Directorio de Novedades
+    Tamaño máximo en Kb para los archivos de logs
 
 ACLARACIÓN: El usuario puede presionar la tecla Enter si no desea especificar cada uno de estos
 directorios, con lo cual el sistema creará los directorios con los nombres especificados por defecto.
+Los directorios se crearán dentro de la carpeta grupo02.
+
+Nomenclatura:
+Los nombres de los directorios deben ser alfanuméricos, no se aceptan caracteres especiales.
+Los directorios simples pueden o no comenzar con una barra /.
+Los directorios compuestos (directorios que contienen subdirectorios) deben comenzar con una barra / .
+
+
 
 4) Luego se desplegarán los paths especificados por el usuario para que el mismo los pueda chequear.
 
