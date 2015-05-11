@@ -12,6 +12,7 @@ cp -r RecPro grupo02/RecPro
 cp -r InfPro grupo02/InfPro
 cp -r pruebas grupo02/pruebas
 cp -r Datos grupo02/Datos
+cp -r ArchivosCaminoFeliz grupo02/ArchivosCaminoFeliz
 
 echo
 echo Directorios copiados .. 
