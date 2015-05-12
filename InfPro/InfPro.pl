@@ -4,7 +4,7 @@
 #use Switch;
 use Data::Dumper;
 use Env;
-
+use Text::ParseWords;
 
 #----- Valido el input -------
 my $num_args = $#ARGV + 1;
@@ -153,7 +153,9 @@ sub parseDoc {
 	my $file = shift;
 	open(FILE, "$file") or return 0;
 	while (my $line = <FILE>) {
-		my @splittedLine = split(';', $line);
+		#my @splittedLine = split(';', $line);
+		my @splittedLine = quotewords(';',0, $line);
+
 		chomp($splittedLine[13]);
 		my %fileParsed = (
 			'fuente' => $splittedLine[0],
@@ -217,7 +219,8 @@ sub parseDocInforme {
 	my $file = shift;
 	open(FILE, "$file") or return 0;
 	while (my $line = <FILE>) {
-		my @splittedLine = split(';', $line);
+		my @splittedLine = quotewords(';', 0, $line);
+		#my @splittedLine = split(';', $line);
 		chomp($splittedLine[9]);
 		my %fileParsed = (
 			'cod_norma' => $splittedLine[0],
@@ -328,7 +331,8 @@ sub parseDocEstadistica {
 	@emisores = ();
 
 	while (my $line = <FILE>) {
-		my @splittedLine = split(';', $line);
+		#my @splittedLine = split(';', $line);
+		my @splittedLine = quotewords(';', 0, $line);
 		if (!length $procesedFile{'cod_gestion'}) {
 			$procesedFile{'cod_gestion'} = $splittedLine[11];
 		}
