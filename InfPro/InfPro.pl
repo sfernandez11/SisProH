@@ -6,6 +6,9 @@ use Data::Dumper;
 use Env;
 use Text::ParseWords;
 
+if (!$ENV{'PROCDIR'}) {
+	die 'No estan seteadas las variables de ambiente. Por favor, corre el comando ". IniPro.sh" desde la carpeta bin en el directorio de instalacion del programa.';	
+}
 #----- Valido el input -------
 my $num_args = $#ARGV + 1;
 if ($num_args == 0) {
